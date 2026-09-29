@@ -35,8 +35,18 @@ def seed_database(db: Session = None, reset: bool = False):
         print("Resetting database: dropping and recreating all tables...")
         # Import all models to ensure metadata has complete table registrations
         from app.models import base, user, academic, pbl, group, topic, progress, notification  # noqa
-        Base.metadata.drop_all(bind=engine)
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            if engine.dialect.name == "postgresql":
+                conn.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
+                conn.commit()
+            else:
+                Base.metadata.drop_all(bind=engine)
         init_db()
+        if should_close and db:
+            db.close()
+        db = SessionLocal()
+        should_close = True
     else:
         init_db()
 
