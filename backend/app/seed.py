@@ -27,30 +27,20 @@ from app.models.notification import Notification
 
 def seed_database(db: Session = None, reset: bool = False):
     should_close = False
-    should_close = False
     if reset:
-        print("Resetting database: dropping and recreating all tables...")
+        print("Resetting database: clearing all existing records across tables...")
         # Import all models to ensure metadata has complete table registrations
         from app.models import base, user, academic, pbl, group, topic, progress, notification  # noqa
-        from sqlalchemy import text
+        init_db()
         if db:
             db.close()
-        engine.dispose()
         with engine.connect() as conn:
-            if engine.dialect.name == "postgresql":
-                conn.execute(text("""
-                    DO $$ DECLARE
-                        r RECORD;
-                    BEGIN
-                        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-                            EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
-                        END LOOP;
-                    END $$;
-                """))
-                conn.commit()
-            else:
-                Base.metadata.drop_all(bind=engine)
-        init_db()
+            for table in reversed(Base.metadata.sorted_tables):
+                try:
+                    conn.execute(table.delete())
+                except Exception as e:
+                    print(f"Note on clearing {table.name}: {e}")
+            conn.commit()
         db = SessionLocal()
         should_close = True
     else:
