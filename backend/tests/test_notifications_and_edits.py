@@ -117,3 +117,110 @@ def test_admin_student_and_faculty_editing(client, admin_token):
     assert faculty_edit.status_code == 200
     assert faculty_edit.json()["phone"] == "+91 9998887776"
     assert faculty_edit.json()["faculty_code"] == "CSE-FAC-01"
+
+
+def test_draft_hidden_pbl_and_publish_workflow(client, db, faculty_token, student_token):
+    from app.models.user import Student
+    faculty_headers = {"Authorization": f"Bearer {faculty_token}"}
+    student_headers = {"Authorization": f"Bearer {student_token}"}
+
+    rahul = db.query(Student).filter(Student.enrollment_number == "230101").first()
+    assert rahul is not None
+
+    today = datetime.now(timezone.utc).date()
+    # 1. Create a DRAFT (hidden) PBL
+    draft_payload = {
+        "title": "Secret Robotics Challenge",
+        "description": "Embedded ROS 2 controllers",
+        "subject_id": 1,
+        "academic_year_id": 1,
+        "semester_id": rahul.semester_id,
+        "department_id": rahul.department_id,
+        "start_date": str(today),
+        "end_date": str(today + timedelta(days=60)),
+        "status": "DRAFT",
+        "topic_mode": "NO_TOPIC",
+        "allow_student_groups": True,
+        "require_group_approval": False,
+        "faculty_ids": [1]
+    }
+    create_res = client.post("/api/v1/faculty/pbl", headers=faculty_headers, json=draft_payload)
+    assert create_res.status_code == 200
+    pbl_id = create_res.json()["id"]
+
+    # Student must NOT receive any notification about draft PBL
+    notif_res = client.get("/api/v1/notifications", headers=student_headers)
+    assert notif_res.status_code == 200
+    draft_notifs = [
+        n for n in notif_res.json()["notifications"]
+        if "Secret Robotics Challenge" in n["title"]
+    ]
+    assert len(draft_notifs) == 0
+
+    # Student cannot view draft PBL
+    student_pbl_res = client.get(f"/api/v1/students/me/pbl/{pbl_id}", headers=student_headers)
+    assert student_pbl_res.status_code == 404
+
+    # 2. Add component to the draft PBL -> student must NOT be notified while hidden
+    comp_res = client.post(
+        f"/api/v1/faculty/pbl/{pbl_id}/components",
+        headers=faculty_headers,
+        json={
+            "component_type_id": 1,
+            "title": "Robotics URDF Modeling",
+            "description": "Submit kinematics model",
+            "deadline": (datetime.now(timezone.utc) + timedelta(days=10)).isoformat(),
+            "submission_required": True,
+            "is_group": False,
+            "assignments": [{"scope_type": "ALL", "target_id": None}]
+        }
+    )
+    assert comp_res.status_code == 200
+    comp_id = comp_res.json()["id"]
+
+    notif_res2 = client.get("/api/v1/notifications", headers=student_headers)
+    comp_notifs = [
+        n for n in notif_res2.json()["notifications"]
+        if "Robotics URDF Modeling" in n["title"]
+    ]
+    assert len(comp_notifs) == 0
+
+    # 3. Faculty Publishes the PBL (status: DRAFT -> ACTIVE)
+    publish_res = client.patch(
+        f"/api/v1/faculty/pbl/{pbl_id}",
+        headers=faculty_headers,
+        json={"status": "ACTIVE"}
+    )
+    assert publish_res.status_code == 200
+    assert publish_res.json()["status"] == "ACTIVE"
+
+    # Now student receives the notification that the PBL is active/published!
+    notif_res3 = client.get("/api/v1/notifications", headers=student_headers)
+    pub_notifs = [
+        n for n in notif_res3.json()["notifications"]
+        if "Secret Robotics Challenge" in n["title"] or "Secret Robotics Challenge" in n["message"]
+    ]
+    assert len(pub_notifs) > 0
+
+    # And student can now view the PBL!
+    student_pbl_active = client.get(f"/api/v1/students/me/pbl/{pbl_id}", headers=student_headers)
+    assert student_pbl_active.status_code == 200
+
+    # 4. In published state, faculty updates the component -> student receives update notification
+    update_comp_res = client.patch(
+        f"/api/v1/faculty/components/{comp_id}",
+        headers=faculty_headers,
+        json={
+            "title": "Robotics URDF Modeling (Revised Spec)",
+            "description": "Updated deadline and submission guidelines"
+        }
+    )
+    assert update_comp_res.status_code == 200
+
+    notif_res4 = client.get("/api/v1/notifications", headers=student_headers)
+    updated_comp_notifs = [
+        n for n in notif_res4.json()["notifications"]
+        if "Robotics URDF Modeling (Revised Spec)" in n["title"]
+    ]
+    assert len(updated_comp_notifs) > 0
+

@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta, timezone
 from sqlalchemy.orm import Session
-from app.core.database import SessionLocal, init_db
+from app.core.database import SessionLocal, init_db, engine, Base
 from app.core.security import get_password_hash
 from app.models.user import User, Student, Faculty, UserRole
 from app.models.academic import Department, Program, AcademicYear, Semester, Division, Subject
@@ -25,15 +25,23 @@ from app.models.progress import (
 from app.models.notification import Notification
 
 
-def seed_database(db: Session = None):
-    init_db()
+def seed_database(db: Session = None, reset: bool = False):
     should_close = False
     if db is None:
         db = SessionLocal()
         should_close = True
 
-    # Avoid duplicate seeding if admin user already exists
-    if db.query(User).filter(User.username == "admin").first():
+    if reset:
+        print("Resetting database: dropping and recreating all tables...")
+        # Import all models to ensure metadata has complete table registrations
+        from app.models import base, user, academic, pbl, group, topic, progress, notification  # noqa
+        Base.metadata.drop_all(bind=engine)
+        init_db()
+    else:
+        init_db()
+
+    # Avoid duplicate seeding if admin user already exists and reset is False
+    if not reset and db.query(User).filter(User.username == "admin").first():
         print("Database already contains seed data. Skipping.")
         if should_close:
             db.close()
@@ -76,16 +84,39 @@ def seed_database(db: Session = None):
     db.add_all([div_a, div_b])
     db.flush()
 
-    # 6. Subjects (Computer Engineering Semester 5)
+    # 6. Subjects (Realistic Academic Offerings)
+    # Computer Engineering Semester 5
     sub_cn = Subject(name="Computer Networks", subject_code="CS501", semester_id=sem_5.id, department_id=dept_ce.id, description="Data communication, OSI model, IP routing, packet inspection")
     sub_db = Subject(name="Database Management Systems", subject_code="CS502", semester_id=sem_5.id, department_id=dept_ce.id, description="Relational model, SQL, normalization, transaction management")
     sub_os = Subject(name="Operating Systems", subject_code="CS503", semester_id=sem_5.id, department_id=dept_ce.id, description="Process scheduling, concurrency, memory management, file systems")
     sub_se = Subject(name="Software Engineering", subject_code="CS504", semester_id=sem_5.id, department_id=dept_ce.id, description="SDLC, Agile methodology, requirements engineering, UML modeling")
     sub_ai = Subject(name="Artificial Intelligence", subject_code="CS505", semester_id=sem_5.id, department_id=dept_ce.id, description="Search algorithms, knowledge representation, machine learning fundamentals")
+    sub_wad = Subject(name="Web Application Development", subject_code="CS506", semester_id=sem_5.id, department_id=dept_ce.id, description="Full-stack client/server systems, RESTful microservices, state management, and web security")
+    sub_cc = Subject(name="Cloud Computing & DevOps", subject_code="CS507", semester_id=sem_5.id, department_id=dept_ce.id, description="Virtualization, AWS/GCP cloud services, Docker containers, Kubernetes, CI/CD automation")
+    sub_sec = Subject(name="Cyber Security & Cryptography", subject_code="CS508", semester_id=sem_5.id, department_id=dept_ce.id, description="Symmetric/asymmetric ciphers, network vulnerability assessment, web exploitation defense")
+
+    # Computer Engineering Semester 3
+    sub_dsa = Subject(name="Data Structures & Algorithms", subject_code="CS301", semester_id=sem_3.id, department_id=dept_ce.id, description="Linear and non-linear data structures, asymptotic complexity analysis, graph traversals")
+    sub_java = Subject(name="Object Oriented Programming with Java", subject_code="CS302", semester_id=sem_3.id, department_id=dept_ce.id, description="OOP paradigms, Java collections framework, exception handling, multithreading")
+    sub_dlca = Subject(name="Digital Logic & Computer Architecture", subject_code="CS303", semester_id=sem_3.id, department_id=dept_ce.id, description="Combinational logic, sequential circuits, processor datapath, cache hierarchies")
+
+    # Computer Engineering Semester 7
+    sub_ml = Subject(name="Machine Learning & Deep Neural Networks", subject_code="CS701", semester_id=sem_7.id, department_id=dept_ce.id, description="Supervised learning, deep backpropagation, CNNs, transformers, generative models")
+    sub_dist = Subject(name="Distributed Computing Systems", subject_code="CS702", semester_id=sem_7.id, department_id=dept_ce.id, description="Consensus algorithms, Paxos/Raft protocols, RPC frameworks, partition tolerance")
+
+    # Information Technology Semester 5
+    sub_mob = Subject(name="Mobile Application Engineering", subject_code="IT501", semester_id=sem_5.id, department_id=dept_it.id, description="Cross-platform mobile apps, native device hardware APIs, offline data sync")
+    sub_iot = Subject(name="Internet of Things (IoT) Systems", subject_code="IT502", semester_id=sem_5.id, department_id=dept_it.id, description="Microcontrollers, sensors, MQTT telemetry, smart campus edge devices")
     
     # Historical subject
     sub_cn_past = Subject(name="Computer Networks (Old)", subject_code="CS501-OLD", semester_id=sem_5_past.id, department_id=dept_ce.id, description="Historical CN curriculum")
-    db.add_all([sub_cn, sub_db, sub_os, sub_se, sub_ai, sub_cn_past])
+    db.add_all([
+        sub_cn, sub_db, sub_os, sub_se, sub_ai, sub_wad, sub_cc, sub_sec,
+        sub_dsa, sub_java, sub_dlca,
+        sub_ml, sub_dist,
+        sub_mob, sub_iot,
+        sub_cn_past
+    ])
     db.flush()
 
     # 7. Component Types
@@ -219,8 +250,22 @@ def seed_database(db: Session = None):
         status=PblStatus.ARCHIVED,
         created_by=u_fac1.id
     )
+    # PBL 6: Web App Development (DRAFT - Hidden mode demonstration)
+    pbl_wad = PblActivity(
+        title="Full Stack Web Applications & Real-time Sockets",
+        description="Design and implement a cloud-deployed collaborative web platform with authentication, state caching, and responsive UI.",
+        subject_id=sub_wad.id,
+        academic_year_id=ay_current.id,
+        semester_id=sem_5.id,
+        department_id=dept_ce.id,
+        start_date=date(2026, 8, 15),
+        end_date=date(2026, 12, 10),
+        status=PblStatus.DRAFT,  # Hidden from students until faculty publishes!
+        topic_mode=TopicMode.STUDENT_PROPOSED,
+        created_by=u_fac1.id
+    )
 
-    db.add_all([pbl_cn, pbl_db, pbl_os, pbl_se, pbl_ai, pbl_cn_past])
+    db.add_all([pbl_cn, pbl_db, pbl_os, pbl_se, pbl_ai, pbl_wad, pbl_cn_past])
     db.flush()
 
     # Faculty Assignments to PBLs
@@ -231,6 +276,7 @@ def seed_database(db: Session = None):
         PblFaculty(pbl_activity_id=pbl_os.id, faculty_id=f_sharma.id, role_description="Lead Coordinator"),
         PblFaculty(pbl_activity_id=pbl_se.id, faculty_id=f_verma.id, role_description="Lead Coordinator"),
         PblFaculty(pbl_activity_id=pbl_ai.id, faculty_id=f_sharma.id, role_description="Lead Coordinator"),
+        PblFaculty(pbl_activity_id=pbl_wad.id, faculty_id=f_sharma.id, role_description="Lead Coordinator"),
     ])
     db.flush()
 
@@ -378,12 +424,37 @@ def seed_database(db: Session = None):
         created_by=u_fac1.id
     )
 
+    # WAD components (draft/hidden along with pbl_wad)
+    c_wad_spec = Component(
+        pbl_activity_id=pbl_wad.id,
+        component_type_id=ct_map["Report"].id,
+        title="System Architecture & OpenAPI Specification",
+        description="Define entity schemas, RESTful endpoint routes, and authentication flow documentation.",
+        deadline=now + timedelta(days=10),
+        submission_required=True,
+        external_submission_url="https://forms.google.com/sample-wad-spec",
+        is_group=False,
+        created_by=u_fac1.id
+    )
+    c_wad_app = Component(
+        pbl_activity_id=pbl_wad.id,
+        component_type_id=ct_map["Mini Project"].id,
+        title="Interactive Frontend & WebSocket Engine Prototype",
+        description="Deploy working multi-user web application with responsive UI and live event broadcasting.",
+        deadline=now + timedelta(days=25),
+        submission_required=True,
+        external_submission_url="https://forms.google.com/sample-wad-app",
+        is_group=True,
+        created_by=u_fac1.id
+    )
+
     all_components = [
         c_cn_exp, c_cn_ppt, c_cn_rep,
         c_db_rep, c_db_cert, c_db_proj,
         c_os_hw, c_os_sem,
         c_se_case, c_se_proj,
-        c_ai_paper, c_ai_post
+        c_ai_paper, c_ai_post,
+        c_wad_spec, c_wad_app
     ]
     db.add_all(all_components)
     db.flush()
@@ -560,4 +631,6 @@ def seed_database(db: Session = None):
 
 
 if __name__ == "__main__":
-    seed_database()
+    import sys
+    do_reset = "--reset" in sys.argv or "-r" in sys.argv
+    seed_database(reset=do_reset)

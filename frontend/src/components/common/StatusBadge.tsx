@@ -61,8 +61,12 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, status }) => {
   } else if (type === 'pbl') {
     switch (status) {
       case 'ACTIVE':
-        label = 'Active';
+        label = 'Published';
         className = 'badge-success';
+        break;
+      case 'DRAFT':
+        label = 'Hidden (Draft)';
+        className = 'badge-warning';
         break;
       case 'COMPLETED':
         label = 'Completed';
@@ -72,10 +76,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, status }) => {
         label = 'Archived';
         className = 'badge-muted';
         break;
-      case 'DRAFT':
       default:
-        label = 'Draft';
-        className = 'badge-warning';
+        label = status;
+        className = 'badge-muted';
         break;
     }
   }

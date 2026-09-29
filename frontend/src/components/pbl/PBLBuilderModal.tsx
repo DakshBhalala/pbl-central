@@ -45,6 +45,7 @@ export const PBLBuilderModal: React.FC<PBLBuilderModalProps> = ({
   const [subjectId, setSubjectId] = useState<number>(0);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [status, setStatus] = useState<'ACTIVE' | 'DRAFT'>('ACTIVE');
   const [topicMode, setTopicMode] = useState<string>('STUDENT_PROPOSED');
   const [selectedFacultyIds, setSelectedFacultyIds] = useState<number[]>([]);
 
@@ -157,7 +158,7 @@ export const PBLBuilderModal: React.FC<PBLBuilderModalProps> = ({
       department_id: departmentId,
       start_date: new Date().toISOString().slice(0, 10),
       end_date: new Date(Date.now() + 120 * 86400000).toISOString().slice(0, 10),
-      status: 'ACTIVE',
+      status: status,
       topic_mode: topicMode,
       allow_student_groups: true,
       require_group_approval: false,
@@ -275,7 +276,7 @@ export const PBLBuilderModal: React.FC<PBLBuilderModalProps> = ({
           />
         </div>
 
-        {/* Topic Mode & Faculty Guides */}
+        {/* Topic Mode & Visibility Stage */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
           <div className="form-group">
             <AppSelect
@@ -288,6 +289,19 @@ export const PBLBuilderModal: React.FC<PBLBuilderModalProps> = ({
                 { value: 'STUDENT_LIST', label: 'Student Selects From List' },
                 { value: 'FACULTY_ASSIGNED', label: 'Faculty Assigned' },
                 { value: 'NO_TOPIC', label: 'No Topic Needed' },
+              ]}
+            />
+          </div>
+
+          <div className="form-group">
+            <AppSelect
+              label="Visibility & Publishing"
+              value={status}
+              onChange={val => setStatus(val as 'ACTIVE' | 'DRAFT')}
+              fullWidth
+              options={[
+                { value: 'ACTIVE', label: 'Published (Visible to students + notifies cohort)' },
+                { value: 'DRAFT', label: 'Draft Mode (Hidden from students while preparing)' },
               ]}
             />
           </div>

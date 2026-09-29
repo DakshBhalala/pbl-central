@@ -175,7 +175,8 @@ def get_student_pbl_detail(
         .filter(
             PblActivity.id == pbl_id,
             PblActivity.department_id == student.department_id,
-            PblActivity.semester_id == student.semester_id
+            PblActivity.semester_id == student.semester_id,
+            PblActivity.status == PblStatus.ACTIVE
         )
         .first()
     )

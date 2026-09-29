@@ -62,6 +62,13 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
     }
 
 
+@router.post("/reset-database")
+def reset_database_endpoint(db: Session = Depends(get_db)):
+    from app.seed import seed_database
+    seed_database(reset=True)
+    return {"message": "Database successfully reset and re-seeded with realistic academic data"}
+
+
 # --- DEPARTMENTS CRUD ---
 @router.get("/departments", response_model=List[DepartmentOut])
 def list_departments(db: Session = Depends(get_db)):

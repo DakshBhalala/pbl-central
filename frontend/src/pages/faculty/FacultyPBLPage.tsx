@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Copy, Layers, Users, ArrowRight } from 'lucide-react';
+import { Plus, Copy, Layers, Users, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { facultyApi } from '../../api/faculty';
 import { PblActivity } from '../../types';
 import { LoadingState } from '../../components/common/LoadingState';
@@ -12,9 +12,12 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { PBLBuilderModal } from '../../components/pbl/PBLBuilderModal';
 import { DuplicatePBLModal } from '../../components/faculty/DuplicatePBLModal';
 import { formatDate } from '../../utils/date';
+import { useToast } from '../../context/ToastContext';
 
 export const FacultyPBLPage: React.FC = () => {
   const navigate = useNavigate();
+  const toast = useToast();
+
   const [activities, setActivities] = useState<PblActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -43,8 +46,8 @@ export const FacultyPBLPage: React.FC = () => {
       setLoading(true);
       const res = await facultyApi.getPblActivities();
       setActivities(res);
-    } catch {
-      // handled
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to load PBL activities');
     } finally {
       setLoading(false);
     }
@@ -59,9 +62,13 @@ export const FacultyPBLPage: React.FC = () => {
       await facultyApi.createPbl(data);
       setBuilderOpen(false);
       loadActivities();
-      alert('PBL Activity successfully created!');
+      if (data.status === 'DRAFT') {
+        toast.info('PBL Activity created in Draft mode. It is hidden from students until published.');
+      } else {
+        toast.success('PBL Activity created and published! Enrolled students have been notified.');
+      }
     } catch (err: any) {
-      alert(err.message || 'Failed to create PBL activity');
+      toast.error(err.message || 'Failed to create PBL activity');
     }
   };
 
@@ -70,9 +77,26 @@ export const FacultyPBLPage: React.FC = () => {
       await facultyApi.duplicatePbl(pblId, data);
       setDuplicateTarget(null);
       loadActivities();
-      alert('PBL Activity structure duplicated into target semester!');
+      toast.success('PBL Activity structure duplicated into target semester!');
     } catch (err: any) {
-      alert(err.message || 'Failed to duplicate PBL activity');
+      toast.error(err.message || 'Failed to duplicate PBL activity');
+    }
+  };
+
+  const handleToggleStatus = async (e: React.MouseEvent, pbl: PblActivity) => {
+    e.stopPropagation();
+    const isDraft = pbl.status === 'DRAFT';
+    const nextStatus = isDraft ? 'ACTIVE' : 'DRAFT';
+    try {
+      await facultyApi.updatePbl(pbl.id, { status: nextStatus });
+      if (isDraft) {
+        toast.success(`Published "${pbl.title}"! Students have been notified.`);
+      } else {
+        toast.info(`"${pbl.title}" is now hidden in draft mode.`);
+      }
+      loadActivities();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update visibility status');
     }
   };
 
@@ -131,10 +155,11 @@ export const FacultyPBLPage: React.FC = () => {
             size="sm"
             value={statusFilter}
             onChange={val => setStatusFilter(String(val))}
-            style={{ minWidth: '140px' }}
+            style={{ minWidth: '160px' }}
             options={[
               { value: 'ALL', label: 'All Statuses' },
-              { value: 'ACTIVE', label: 'Active' },
+              { value: 'ACTIVE', label: 'Published' },
+              { value: 'DRAFT', label: 'Hidden (Draft)' },
               { value: 'COMPLETED', label: 'Completed' },
               { value: 'ARCHIVED', label: 'Archived' },
             ]}
@@ -143,35 +168,33 @@ export const FacultyPBLPage: React.FC = () => {
       />
 
       {filtered.length === 0 ? (
-        <div className="section-block" style={{ padding: '24px' }}>
-          <EmptyState
-            icon={Layers}
-            title="No PBL Activities Found"
-            description="Create your first PBL activity using the builder."
-            action={
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={() => setBuilderOpen(true)}
-              >
-                <Plus size={14} />
-                <span>Open PBL Builder</span>
-              </button>
-            }
-          />
-        </div>
+        <EmptyState
+          title="No PBL activities found"
+          description={search || statusFilter !== 'ALL' ? 'Try adjusting your search query or status filter.' : 'Get started by creating your first course PBL activity.'}
+          action={
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => setBuilderOpen(true)}
+            >
+              <Plus size={14} />
+              <span>Create Activity</span>
+            </button>
+          }
+        />
       ) : viewMode === 'list' ? (
-        <div className="section-block view-mode-transition" style={{ overflow: 'hidden' }}>
+        <div className="panel" style={{ overflow: 'hidden' }}>
           <div className="table-responsive">
-            <table className={`data-table ${density === 'compact' ? 'data-table-compact' : 'data-table-comfortable'}`}>
+            <table className={`data-table ${density === 'comfortable' ? 'data-table-comfortable' : ''}`}>
               <thead>
                 <tr>
-                  <th style={{ width: '30%' }}>Subject & Title</th>
-                  <th style={{ width: '15%' }}>Semester</th>
-                  <th style={{ width: '15%' }}>Components</th>
-                  <th style={{ width: '20%' }}>Schedule</th>
-                  <th style={{ width: '10%' }}>Status</th>
-                  <th style={{ width: '10%', textAlign: 'right' }}>Actions</th>
+                  <th style={{ width: '35%' }}>Activity Title</th>
+                  <th style={{ width: '15%' }}>Subject</th>
+                  <th style={{ width: '15%' }}>Cohort</th>
+                  <th style={{ width: '10%' }}>Milestones</th>
+                  <th style={{ width: '10%' }}>Schedule</th>
+                  <th style={{ width: '7%' }}>Status</th>
+                  <th style={{ width: '8%', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -182,20 +205,25 @@ export const FacultyPBLPage: React.FC = () => {
                     style={{ cursor: 'pointer' }}
                   >
                     <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                            {pbl.subject_name || pbl.title}
-                          </span>
-                          {pbl.subject_code && (
-                            <span className="badge badge-subtle" style={{ fontSize: '0.6875rem' }}>
-                              {pbl.subject_code}
-                            </span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                           {pbl.title}
                         </span>
+                        {pbl.description && (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '340px' }}>
+                            {pbl.description}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {pbl.subject_code && (
+                          <span className="badge badge-accent font-mono" style={{ fontSize: '0.75rem' }}>
+                            {pbl.subject_code}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '0.8125rem' }}>{pbl.subject_name || 'N/A'}</span>
                       </div>
                     </td>
                     <td>
@@ -221,6 +249,15 @@ export const FacultyPBLPage: React.FC = () => {
                         style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}
                         onClick={e => e.stopPropagation()}
                       >
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={e => handleToggleStatus(e, pbl)}
+                          title={pbl.status === 'DRAFT' ? 'Publish to students' : 'Hide from students'}
+                        >
+                          {pbl.status === 'DRAFT' ? <Eye size={12} /> : <EyeOff size={12} />}
+                          <span>{pbl.status === 'DRAFT' ? 'Publish' : 'Hide'}</span>
+                        </button>
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
@@ -284,6 +321,15 @@ export const FacultyPBLPage: React.FC = () => {
               </div>
 
               <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }} onClick={e => e.stopPropagation()}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={e => handleToggleStatus(e, pbl)}
+                  title={pbl.status === 'DRAFT' ? 'Publish to students' : 'Hide from students'}
+                >
+                  {pbl.status === 'DRAFT' ? <Eye size={12} /> : <EyeOff size={12} />}
+                  <span>{pbl.status === 'DRAFT' ? 'Publish' : 'Hide'}</span>
+                </button>
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"

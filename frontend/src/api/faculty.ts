@@ -59,6 +59,13 @@ export const facultyApi = {
     });
   },
 
+  updatePbl: async (id: number, data: any): Promise<PblActivityDetail> => {
+    return apiClient<PblActivityDetail>(`/faculty/pbl/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
   duplicatePbl: async (
     pblId: number,
     data: {

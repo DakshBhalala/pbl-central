@@ -35,8 +35,13 @@ from app.schemas.topic import TopicCreate, TopicOut, TopicRejectRequest, TopicHi
 from app.schemas.progress import FacultyReviewCreate, FacultyReviewOut
 from app.schemas.user import StudentOut, StudentCreate, FacultyOut, FacultyProfileUpdate
 from app.services.pbl_service import duplicate_pbl_activity
-from app.services.csv_service import parse_and_validate_student_csv, execute_student_import
-from app.services.notification_service import create_notification, notify_students_new_pbl, notify_students_new_component
+from app.services.notification_service import (
+    create_notification,
+    notify_students_new_pbl,
+    notify_students_new_component,
+    notify_students_updated_component,
+    notify_students_pbl_updated,
+)
 from app.services.deadline_service import calculate_deadline_info
 
 router = APIRouter(prefix="/faculty", tags=["Faculty"])
@@ -299,8 +304,9 @@ def create_pbl_activity(
     db.commit()
     db.refresh(pbl)
 
-    # Automatically notify all students in the enrolled department and semester
-    notify_students_new_pbl(db, pbl)
+    # Automatically notify all students in the enrolled department and semester only if published (ACTIVE)
+    if pbl.status == PblStatus.ACTIVE:
+        notify_students_new_pbl(db, pbl)
 
     # Fetch created components for response
     comps_out = [
@@ -449,6 +455,55 @@ def get_pbl_activity_detail(
     )
 
 
+@router.patch("/pbl/{pbl_id}", response_model=PblActivityDetailOut)
+def update_pbl_activity(
+    pbl_id: int,
+    data: PblActivityUpdate,
+    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.ADMIN])),
+    db: Session = Depends(get_db)
+):
+    pbl = db.query(PblActivity).filter(PblActivity.id == pbl_id).first()
+    if not pbl:
+        raise HTTPException(status_code=404, detail="PBL Activity not found")
+
+    # If faculty, check department or assignment authorization
+    if current_user.role == UserRole.FACULTY and current_user.faculty_profile:
+        assigned_faculty_ids = [assoc.faculty_id for assoc in pbl.faculty_members]
+        faculty_dept_ids = [d.department_id for d in current_user.faculty_profile.departments]
+        if current_user.faculty_profile.id not in assigned_faculty_ids and pbl.department_id not in faculty_dept_ids:
+            raise HTTPException(status_code=403, detail="You are not authorized to update this PBL activity")
+
+    old_status = pbl.status
+    update_dict = data.dict(exclude_unset=True)
+
+    # Handle faculty assignment updates if provided
+    if "faculty_ids" in update_dict and update_dict["faculty_ids"] is not None:
+        new_fac_ids = set(update_dict.pop("faculty_ids"))
+        db.query(PblFaculty).filter(PblFaculty.pbl_activity_id == pbl.id).delete()
+        for fid in new_fac_ids:
+            db.add(PblFaculty(pbl_activity_id=pbl.id, faculty_id=fid, role_description="Faculty Guide"))
+
+    for field, val in update_dict.items():
+        setattr(pbl, field, val)
+
+    db.commit()
+    db.refresh(pbl)
+
+    new_status = pbl.status
+
+    # Notification logic:
+    # 1. Transition DRAFT -> ACTIVE: Faculty has published the activity! Notify students.
+    if old_status == PblStatus.DRAFT and new_status == PblStatus.ACTIVE:
+        notify_students_new_pbl(db, pbl)
+    # 2. Activity was already ACTIVE and remains ACTIVE: If details changed, notify students of updates.
+    elif old_status == PblStatus.ACTIVE and new_status == PblStatus.ACTIVE:
+        if any(f in update_dict for f in ["title", "description", "start_date", "end_date"]):
+            notify_students_pbl_updated(db, pbl)
+    # 3. If in DRAFT or transitioned to DRAFT: Activity is hidden. Do not notify students.
+
+    return get_pbl_activity_detail(pbl.id, current_user, db)
+
+
 @router.post("/pbl/{pbl_id}/duplicate", response_model=PblActivityDetailOut)
 def duplicate_pbl(
     pbl_id: int,
@@ -509,8 +564,9 @@ def add_pbl_component(
     db.commit()
     db.refresh(comp)
 
-    # Notify students assigned to this component
-    notify_students_new_component(db, comp, pbl)
+    # Notify students assigned to this component only if parent PBL is ACTIVE (published)
+    if pbl.status == PblStatus.ACTIVE:
+        notify_students_new_component(db, comp, pbl)
 
     return ComponentOut(
         id=comp.id,
@@ -555,6 +611,10 @@ def update_component(
 
     db.commit()
     db.refresh(comp)
+
+    # Only notify students if parent PBL activity is ACTIVE (published)
+    if comp.pbl_activity and comp.pbl_activity.status == PblStatus.ACTIVE:
+        notify_students_updated_component(db, comp, comp.pbl_activity)
 
     return ComponentOut(
         id=comp.id,
