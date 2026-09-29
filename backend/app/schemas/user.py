@@ -101,3 +101,29 @@ class UserOut(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class FacultyProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    faculty_code: Optional[str] = None
+
+
+class StudentAdminUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    department_id: Optional[int] = None
+    semester_id: Optional[int] = None
+    division_id: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+class FacultyAdminUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    faculty_code: Optional[str] = None
+    is_active: Optional[bool] = None
+

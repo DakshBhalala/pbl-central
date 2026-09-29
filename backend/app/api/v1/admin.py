@@ -15,7 +15,7 @@ from app.schemas.academic import (
     SubjectCreate, SubjectOut,
 )
 from app.schemas.pbl import ComponentTypeCreate, ComponentTypeOut, PblActivityOut, FacultySimpleOut
-from app.schemas.user import StudentCreate, StudentOut, FacultyCreate, FacultyOut
+from app.schemas.user import StudentCreate, StudentOut, StudentAdminUpdate, FacultyCreate, FacultyOut, FacultyAdminUpdate
 from app.core.security import get_password_hash
 
 router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[Depends(require_role([UserRole.ADMIN]))])
@@ -306,6 +306,51 @@ def create_faculty_account(data: FacultyCreate, db: Session = Depends(get_db)):
     )
 
 
+@router.patch("/faculty/{id}", response_model=FacultyOut)
+def update_faculty_account(id: int, data: FacultyAdminUpdate, db: Session = Depends(get_db)):
+    faculty = db.query(Faculty).filter(Faculty.id == id).first()
+    if not faculty:
+        raise HTTPException(status_code=404, detail="Faculty member not found")
+
+    if data.name is not None and data.name.strip():
+        faculty.name = data.name.strip()
+    if data.email is not None:
+        faculty.email = data.email.strip()
+    if data.phone is not None:
+        faculty.phone = data.phone.strip()
+    if data.faculty_code is not None:
+        faculty.faculty_code = data.faculty_code.strip()
+    if data.is_active is not None and faculty.user:
+        faculty.user.is_active = data.is_active
+
+    db.commit()
+    db.refresh(faculty)
+    return FacultyOut(
+        id=faculty.id,
+        user_id=faculty.user_id,
+        faculty_code=faculty.faculty_code,
+        name=faculty.name,
+        email=faculty.email,
+        phone=faculty.phone,
+        username=faculty.user.username if faculty.user else "",
+        created_at=faculty.created_at
+    )
+
+
+@router.delete("/faculty/{id}")
+def delete_faculty_account(id: int, db: Session = Depends(get_db)):
+    faculty = db.query(Faculty).filter(Faculty.id == id).first()
+    if not faculty:
+        raise HTTPException(status_code=404, detail="Faculty member not found")
+
+    user = faculty.user
+    db.delete(faculty)
+    if user:
+        db.delete(user)
+    db.commit()
+    return {"message": "Faculty account deleted successfully"}
+
+
 # --- STUDENT ACCOUNTS CRUD ---
 @router.get("/students", response_model=List[StudentOut])
 def list_student_accounts(
@@ -384,6 +429,70 @@ def create_student_account(data: StudentCreate, db: Session = Depends(get_db)):
         division_name=student.division.name if student.division else None,
         created_at=student.created_at
     )
+
+
+@router.patch("/students/{id}", response_model=StudentOut)
+def update_student_account(id: int, data: StudentAdminUpdate, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    if data.name is not None and data.name.strip():
+        student.name = data.name.strip()
+    if data.email is not None:
+        student.email = data.email.strip()
+    if data.phone_number is not None:
+        student.phone_number = data.phone_number.strip()
+    if data.department_id is not None:
+        student.department_id = data.department_id
+    if data.semester_id is not None:
+        student.semester_id = data.semester_id
+    if data.division_id is not None:
+        student.division_id = data.division_id
+    if data.is_active is not None and student.user:
+        student.user.is_active = data.is_active
+
+    db.commit()
+    db.refresh(student)
+    return StudentOut(
+        id=student.id,
+        user_id=student.user_id,
+        enrollment_number=student.enrollment_number,
+        name=student.name,
+        email=student.email,
+        phone_number=student.phone_number,
+        department_id=student.department_id,
+        semester_id=student.semester_id,
+        division_id=student.division_id,
+        department_name=student.department.name if student.department else None,
+        semester_name=student.semester.name if student.semester else None,
+        division_name=student.division.name if student.division else None,
+        created_at=student.created_at
+    )
+
+
+@router.delete("/students/{id}")
+def delete_student_account(id: int, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    user = student.user
+    db.delete(student)
+    if user:
+        db.delete(user)
+    db.commit()
+    return {"message": "Student account deleted successfully"}
+
+
+@router.patch("/users/{id}/toggle-status")
+def toggle_user_status(id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_active = not user.is_active
+    db.commit()
+    return {"message": f"User status set to {'active' if user.is_active else 'inactive'}", "is_active": user.is_active}
 
 
 # --- HISTORICAL DATA BROWSER ---

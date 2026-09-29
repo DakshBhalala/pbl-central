@@ -33,10 +33,10 @@ from app.schemas.pbl import (
 from app.schemas.group import GroupCreate, GroupOut, GroupMemberOut, ProjectOut
 from app.schemas.topic import TopicCreate, TopicOut, TopicRejectRequest, TopicHistoryOut
 from app.schemas.progress import FacultyReviewCreate, FacultyReviewOut
-from app.schemas.user import StudentOut, StudentCreate
+from app.schemas.user import StudentOut, StudentCreate, FacultyOut, FacultyProfileUpdate
 from app.services.pbl_service import duplicate_pbl_activity
 from app.services.csv_service import parse_and_validate_student_csv, execute_student_import
-from app.services.notification_service import create_notification
+from app.services.notification_service import create_notification, notify_students_new_pbl, notify_students_new_component
 from app.services.deadline_service import calculate_deadline_info
 
 router = APIRouter(prefix="/faculty", tags=["Faculty"])
@@ -140,6 +140,42 @@ def get_faculty_dashboard(
         "overdue_items": overdue_count,
         "recent_submissions": recent_submissions,
     }
+
+
+@router.patch("/me/profile", response_model=FacultyOut)
+def update_faculty_profile(
+    data: FacultyProfileUpdate,
+    faculty: Optional[Faculty] = Depends(get_current_faculty),
+    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.ADMIN])),
+    db: Session = Depends(get_db)
+):
+    target_faculty = faculty
+    if not target_faculty and current_user.faculty_profile:
+        target_faculty = current_user.faculty_profile
+    if not target_faculty:
+        raise HTTPException(status_code=404, detail="Faculty profile not found")
+
+    if data.name is not None and data.name.strip():
+        target_faculty.name = data.name.strip()
+    if data.email is not None:
+        target_faculty.email = data.email.strip()
+    if data.phone is not None:
+        target_faculty.phone = data.phone.strip()
+    if data.faculty_code is not None:
+        target_faculty.faculty_code = data.faculty_code.strip()
+
+    db.commit()
+    db.refresh(target_faculty)
+    return FacultyOut(
+        id=target_faculty.id,
+        user_id=target_faculty.user_id,
+        faculty_code=target_faculty.faculty_code,
+        name=target_faculty.name,
+        email=target_faculty.email,
+        phone=target_faculty.phone,
+        username=target_faculty.user.username if target_faculty.user else "",
+        created_at=target_faculty.created_at
+    )
 
 
 @router.get("/pbl", response_model=List[PblActivityOut])
@@ -262,6 +298,9 @@ def create_pbl_activity(
 
     db.commit()
     db.refresh(pbl)
+
+    # Automatically notify all students in the enrolled department and semester
+    notify_students_new_pbl(db, pbl)
 
     # Fetch created components for response
     comps_out = [
@@ -419,6 +458,7 @@ def duplicate_pbl(
 ):
     try:
         new_pbl = duplicate_pbl_activity(db, pbl_id, req, current_user.id)
+        notify_students_new_pbl(db, new_pbl)
         return get_pbl_activity_detail(new_pbl.id, current_user, db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -468,6 +508,9 @@ def add_pbl_component(
 
     db.commit()
     db.refresh(comp)
+
+    # Notify students assigned to this component
+    notify_students_new_component(db, comp, pbl)
 
     return ComponentOut(
         id=comp.id,
