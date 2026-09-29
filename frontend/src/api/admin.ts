@@ -133,4 +133,11 @@ export const adminApi = {
     if (params.toString()) url += `?${params.toString()}`;
     return apiClient<PblActivity[]>(url);
   },
+
+  // Reset Database to Demo Data
+  resetDatabase: async (): Promise<{ message: string }> => {
+    return apiClient<{ message: string }>('/admin/reset-database', {
+      method: 'POST',
+    });
+  },
 };

@@ -15,17 +15,20 @@ import {
   Cpu,
   CheckCircle2,
   ExternalLink,
+  RotateCcw,
 } from 'lucide-react';
 import { adminApi, AdminDashboardStats } from '../../api/admin';
 import { Department } from '../../types';
 import { LoadingState } from '../../components/common/LoadingState';
+import { ResetDatabaseModal } from '../../components/admin/ResetDatabaseModal';
 
 export const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showResetModal, setShowResetModal] = useState(false);
 
-  useEffect(() => {
+  const loadData = () => {
     Promise.all([
       adminApi.getDashboard(),
       adminApi.getDepartments().catch(() => [] as Department[]),
@@ -34,6 +37,10 @@ export const AdminDashboard: React.FC = () => {
       setDepartments(deptsRes);
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   if (loading || !stats) return <LoadingState message="Loading institutional operating console..." />;
@@ -43,6 +50,12 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '1440px' }}>
+      <ResetDatabaseModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onSuccess={loadData}
+      />
+
       {/* 1. OPERATING CONSOLE HEADER */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
@@ -55,7 +68,24 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowResetModal(true)}
+              className="btn btn-secondary btn-sm"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: '#d97706',
+                borderColor: 'rgba(217, 119, 6, 0.35)',
+                backgroundColor: 'rgba(245, 158, 11, 0.06)',
+                fontWeight: 600,
+              }}
+              title="Reset database to clean demo curriculum and sample data for faculty demonstration"
+            >
+              <RotateCcw size={13} />
+              <span>Reset to Demo Data</span>
+            </button>
             <Link to="/admin/users" className="btn btn-secondary btn-sm">
               <Users size={13} />
               <span>Manage Users</span>

@@ -75,16 +75,14 @@ def seed_database(db: Session = None, reset: bool = False):
 
     # 3. Academic Years
     ay_current = AcademicYear(name="2026–27", start_date=date(2026, 7, 1), end_date=date(2027, 6, 30), is_current=True)
-    ay_past = AcademicYear(name="2025–26", start_date=date(2025, 7, 1), end_date=date(2026, 6, 30), is_current=False)
-    db.add_all([ay_current, ay_past])
+    db.add(ay_current)
     db.flush()
 
     # 4. Semesters
     sem_3 = Semester(name="Semester 3", number=3, academic_year_id=ay_current.id, department_id=dept_ce.id, program_id=prog_btech.id)
     sem_5 = Semester(name="Semester 5", number=5, academic_year_id=ay_current.id, department_id=dept_ce.id, program_id=prog_btech.id)
     sem_7 = Semester(name="Semester 7", number=7, academic_year_id=ay_current.id, department_id=dept_ce.id, program_id=prog_btech.id)
-    sem_5_past = Semester(name="Semester 5 (2025)", number=5, academic_year_id=ay_past.id, department_id=dept_ce.id, program_id=prog_btech.id)
-    db.add_all([sem_3, sem_5, sem_7, sem_5_past])
+    db.add_all([sem_3, sem_5, sem_7])
     db.flush()
 
     # 5. Divisions
@@ -117,14 +115,11 @@ def seed_database(db: Session = None, reset: bool = False):
     sub_mob = Subject(name="Mobile Application Engineering", subject_code="IT501", semester_id=sem_5.id, department_id=dept_it.id, description="Cross-platform mobile apps, native device hardware APIs, offline data sync")
     sub_iot = Subject(name="Internet of Things (IoT) Systems", subject_code="IT502", semester_id=sem_5.id, department_id=dept_it.id, description="Microcontrollers, sensors, MQTT telemetry, smart campus edge devices")
     
-    # Historical subject
-    sub_cn_past = Subject(name="Computer Networks (Old)", subject_code="CS501-OLD", semester_id=sem_5_past.id, department_id=dept_ce.id, description="Historical CN curriculum")
     db.add_all([
         sub_cn, sub_db, sub_os, sub_se, sub_ai, sub_wad, sub_cc, sub_sec,
         sub_dsa, sub_java, sub_dlca,
         sub_ml, sub_dist,
-        sub_mob, sub_iot,
-        sub_cn_past
+        sub_mob, sub_iot
     ])
     db.flush()
 
@@ -246,19 +241,6 @@ def seed_database(db: Session = None, reset: bool = False):
         topic_mode=TopicMode.NO_TOPIC,
         created_by=u_fac1.id
     )
-    # Historical PBL for Archive testing
-    pbl_cn_past = PblActivity(
-        title="Computer Networks PBL (2025)",
-        description="Historical archive of 2025 computer networks cohort.",
-        subject_id=sub_cn_past.id,
-        academic_year_id=ay_past.id,
-        semester_id=sem_5_past.id,
-        department_id=dept_ce.id,
-        start_date=date(2025, 7, 15),
-        end_date=date(2025, 11, 30),
-        status=PblStatus.ARCHIVED,
-        created_by=u_fac1.id
-    )
     # PBL 6: Web App Development (DRAFT - Hidden mode demonstration)
     pbl_wad = PblActivity(
         title="Full Stack Web Applications & Real-time Sockets",
@@ -274,7 +256,7 @@ def seed_database(db: Session = None, reset: bool = False):
         created_by=u_fac1.id
     )
 
-    db.add_all([pbl_cn, pbl_db, pbl_os, pbl_se, pbl_ai, pbl_wad, pbl_cn_past])
+    db.add_all([pbl_cn, pbl_db, pbl_os, pbl_se, pbl_ai, pbl_wad])
     db.flush()
 
     # Faculty Assignments to PBLs

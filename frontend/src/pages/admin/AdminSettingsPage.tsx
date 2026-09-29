@@ -1,10 +1,18 @@
-import React from 'react';
-import { Settings, Database, Shield, Server, CheckCircle2, Lock, Terminal, Cpu } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, Database, Shield, Server, CheckCircle2, Lock, Terminal, Cpu, RotateCcw } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
+import { ResetDatabaseModal } from '../../components/admin/ResetDatabaseModal';
 
 export const AdminSettingsPage: React.FC = () => {
+  const [showResetModal, setShowResetModal] = useState(false);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '880px' }}>
+      <ResetDatabaseModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onSuccess={() => {}}
+      />
       <PageHeader
         breadcrumbs={[
           { label: 'Admin Console' },
@@ -58,6 +66,35 @@ export const AdminSettingsPage: React.FC = () => {
               </span>
             </div>
             <span className="badge badge-success">Enforced</span>
+          </div>
+
+          <div className="workspace-list-item" style={{ padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(245, 158, 11, 0.03)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxWidth: '540px' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <RotateCcw size={14} style={{ color: '#d97706' }} />
+                <span>Demo Data Environment Reset</span>
+              </span>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                Restore clean demo data anytime for faculty presentation (15 realistic subjects, Semesters 3/5/7, pre-configured faculty/students, and active/draft PBL activities).
+              </span>
+            </div>
+            <button
+              onClick={() => setShowResetModal(true)}
+              className="btn btn-secondary btn-sm"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: '#d97706',
+                borderColor: 'rgba(217, 119, 6, 0.35)',
+                backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                fontWeight: 600,
+                flexShrink: 0,
+              }}
+            >
+              <RotateCcw size={13} />
+              <span>Reset Database</span>
+            </button>
           </div>
         </div>
       </div>
