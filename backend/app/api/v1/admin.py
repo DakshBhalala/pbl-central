@@ -63,8 +63,10 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
 
 
 @router.post("/reset-database")
-def reset_database_endpoint(db: Session = Depends(get_db)):
+def reset_database_endpoint():
     from app.seed import seed_database
+    from app.core.database import engine
+    engine.dispose()
     seed_database(reset=True)
     return {"message": "Database successfully reset and re-seeded with realistic academic data"}
 
