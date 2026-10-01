@@ -33,7 +33,7 @@ export const StudentPBLDetail: React.FC = () => {
   const [pbl, setPbl] = useState<PblActivityDetail | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'components' | 'project' | 'group' | 'timeline'>('overview');
+  const [activeTab, setActiveTab] = useState<'milestones' | 'project'>('milestones');
 
   // Drawer state for component inspect/edit
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(null);
@@ -110,7 +110,7 @@ export const StudentPBLDetail: React.FC = () => {
       setProposeModalOpen(false);
       setTopicTitle('');
       setTopicDesc('');
-      alert('Topic proposed successfully! Automatically approved per academic regulations.');
+      alert('Topic submitted successfully!');
       loadData();
     } catch (err: any) {
       alert(err.message || 'Failed to propose topic');
@@ -160,11 +160,11 @@ export const StudentPBLDetail: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Enterprise Page Header */}
+      {/* Page Header */}
       <PageHeader
         breadcrumbs={[
           { label: 'Student Workspace' },
-          { label: 'My PBL', path: '/student/pbl' },
+          { label: 'My Projects', path: '/student/pbl' },
           { label: pbl.subject_name || pbl.title },
         ]}
         title={pbl.subject_name ? `${pbl.subject_name} PBL` : pbl.title}
@@ -176,7 +176,7 @@ export const StudentPBLDetail: React.FC = () => {
         }
       />
 
-      {/* Tab Strip with smooth mobile scrolling */}
+      {/* Clean Tab Navigation */}
       <div
         style={{
           display: 'flex',
@@ -190,11 +190,8 @@ export const StudentPBLDetail: React.FC = () => {
         className="tabs-nav"
       >
         {[
-          { id: 'overview', label: 'Overview' },
-          { id: 'components', label: `Components (${pbl.components.length})` },
-          { id: 'project', label: 'Project' },
-          { id: 'group', label: 'Group' },
-          { id: 'timeline', label: 'Timeline' },
+          { id: 'milestones', label: `Milestones (${pbl.components.length})` },
+          { id: 'project', label: 'Project & Team' },
         ].map(tab => {
           const isActive = activeTab === tab.id;
           return (
@@ -210,10 +207,10 @@ export const StudentPBLDetail: React.FC = () => {
         })}
       </div>
 
-      {/* TAB: OVERVIEW & COMPONENTS */}
-      {(activeTab === 'overview' || activeTab === 'components') && (
+      {/* TAB: MILESTONES & DELIVERABLES */}
+      {activeTab === 'milestones' && (
         <div className="view-mode-transition" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Top Progress & Faculty Ribbon */}
+          {/* Top Progress & Faculty Summary */}
           <div className="panel" style={{ padding: '18px 22px' }}>
             <div
               style={{
@@ -225,7 +222,7 @@ export const StudentPBLDetail: React.FC = () => {
             >
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Curriculum Progress
+                  Milestone Progress
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginTop: '4px' }}>
                   <span style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>
@@ -242,33 +239,33 @@ export const StudentPBLDetail: React.FC = () => {
 
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Faculty Guides
+                  Faculty Guide
                 </div>
                 <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '4px' }}>
                   {pbl.faculty_members && pbl.faculty_members.length > 0
                     ? pbl.faculty_members.map(f => f.name).join(', ')
-                    : 'Department Faculty Coordinator'}
+                    : 'Course Faculty'}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  Schedule: {formatDate(pbl.start_date)} to {formatDate(pbl.end_date)}
+                  Duration: {formatDate(pbl.start_date)} to {formatDate(pbl.end_date)}
                 </div>
               </div>
 
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Topic Mode & Scope
+                  Topic Mode & Team
                 </div>
                 <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '4px' }}>
                   {pbl.topic_mode.replace(/_/g, ' ')}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  {myGroup ? `Group: ${myGroup.group_name} (${myGroup.group_code})` : 'Individual Track'}
+                  {myGroup ? `Group: ${myGroup.group_name} (${myGroup.group_code})` : 'Individual Project'}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Clean Components Task List Table */}
+          {/* Clean Milestones Table */}
           <div className="panel" style={{ overflow: 'hidden' }}>
             <div
               style={{
@@ -280,16 +277,16 @@ export const StudentPBLDetail: React.FC = () => {
               }}
             >
               <div>
-                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600 }}>Components & Deliverables</h3>
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600 }}>Project Milestones</h3>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  Click any row to open the full submission sheet and instructions
+                  Click any milestone to view details and submit your work
                 </p>
               </div>
             </div>
 
             {pbl.components.length === 0 ? (
               <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
-                No components currently configured for this PBL curriculum.
+                No milestones currently configured for this project.
               </div>
             ) : (
               <div className="table-responsive">
@@ -297,7 +294,7 @@ export const StudentPBLDetail: React.FC = () => {
                   <thead>
                     <tr>
                       <th style={{ width: '6%', textAlign: 'center' }}>#</th>
-                      <th style={{ width: '35%' }}>Milestone Deliverable</th>
+                      <th style={{ width: '35%' }}>Milestone</th>
                       <th style={{ width: '15%' }}>Type</th>
                       <th style={{ width: '18%' }}>Deadline</th>
                       <th style={{ width: '14%' }}>Status</th>
@@ -322,7 +319,6 @@ export const StudentPBLDetail: React.FC = () => {
                           </td>
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              {/* Semantic Status Dot/Icon */}
                               {isDone ? (
                                 <CheckCircle2 size={16} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
                               ) : isOverdue ? (
@@ -338,7 +334,7 @@ export const StudentPBLDetail: React.FC = () => {
                                 </span>
                                 {comp.assignment_custom_description && (
                                   <div style={{ fontSize: '0.6875rem', color: 'var(--accent)' }}>
-                                    Your group instructions active
+                                    Group-specific instructions available
                                   </div>
                                 )}
                               </div>
@@ -384,7 +380,7 @@ export const StudentPBLDetail: React.FC = () => {
                                 setSelectedComponent(comp);
                               }}
                             >
-                              Sheet
+                              Details
                             </button>
                           </td>
                         </tr>
@@ -398,9 +394,10 @@ export const StudentPBLDetail: React.FC = () => {
         </div>
       )}
 
-      {/* TAB: PROJECT & TOPIC */}
+      {/* TAB: PROJECT & TEAM */}
       {activeTab === 'project' && (
         <div className="view-mode-transition" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+          {/* Project Topic Card */}
           <div className="panel" style={{ padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <h3 style={{ fontSize: '0.9375rem', fontWeight: 600 }}>Project Topic</h3>
@@ -421,7 +418,7 @@ export const StudentPBLDetail: React.FC = () => {
                   onClick={handleOpenPool}
                 >
                   <PlusCircle size={13} />
-                  <span>Select from Pool</span>
+                  <span>Select from List</span>
                 </button>
               )}
             </div>
@@ -429,7 +426,7 @@ export const StudentPBLDetail: React.FC = () => {
             {myGroup?.project ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Current Project Assignment
+                  Assigned Project
                 </div>
                 <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                   {myGroup.project.title}
@@ -448,7 +445,7 @@ export const StudentPBLDetail: React.FC = () => {
                     style={{ alignSelf: 'flex-start', marginTop: '6px' }}
                   >
                     <ExternalLink size={12} />
-                    <span>Project Repository / Documentation</span>
+                    <span>Project Repository / Docs</span>
                   </a>
                 )}
               </div>
@@ -458,34 +455,27 @@ export const StudentPBLDetail: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
-      )}
 
-      {/* TAB: GROUP DETAILS */}
-      {activeTab === 'group' && (
-        <div className="panel view-mode-transition" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <div>
-              <h3 style={{ fontSize: '0.9375rem', fontWeight: 600 }}>Assigned Project Group</h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Collaborative team membership for this subject
-              </p>
-            </div>
-            {myGroup && (
-              <span className="badge badge-subtle font-mono">{myGroup.group_code}</span>
-            )}
-          </div>
-
-          {myGroup ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {myGroup.group_name}
-              </div>
-
+          {/* Assigned Group & Team Members Card */}
+          <div className="panel" style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  Team Members ({myGroup.members.length})
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600 }}>Team Members</h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Group members working on this project
+                </p>
+              </div>
+              {myGroup && (
+                <span className="badge badge-subtle font-mono">{myGroup.group_code}</span>
+              )}
+            </div>
+
+            {myGroup ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {myGroup.group_name}
                 </div>
+
                 <div className="table-responsive">
                   <table className="data-table">
                     <thead>
@@ -511,88 +501,11 @@ export const StudentPBLDetail: React.FC = () => {
                   </table>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
-              You are currently registered as an individual student for this subject activity.
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB: TIMELINE (Section 33: Gantt milestone schedule) */}
-      {activeTab === 'timeline' && (
-        <div className="section-block view-mode-transition">
-          <div className="section-header">
-            <span className="section-title">Timeline Schedule</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              {pbl.components.length} components · {formatDate(pbl.start_date)} to {formatDate(pbl.end_date)}
-            </span>
-          </div>
-
-          <div
-            style={{
-              backgroundColor: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '20px',
-              overflowX: 'auto',
-            }}
-          >
-            <div style={{ minWidth: '600px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {pbl.components.map((comp, idx) => {
-                const isDone = comp.student_progress_state === 'DONE';
-                const isInProgress = comp.student_progress_state === 'IN_PROGRESS';
-                const isOverdue = comp.deadline_state === 'OVERDUE';
-
-                return (
-                  <div
-                    key={comp.id}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '220px 1fr 110px',
-                      alignItems: 'center',
-                      gap: '16px',
-                      paddingBottom: '10px',
-                      borderBottom: '1px solid var(--border-subtle)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                      <span className="font-mono text-muted" style={{ fontSize: '0.75rem' }}>
-                        {String(idx + 1).padStart(2, '0')}
-                      </span>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-primary)' }} className="truncate">
-                        {comp.title}
-                      </span>
-                    </div>
-
-                    {/* Progress duration bar */}
-                    <div
-                      style={{
-                        width: '100%',
-                        backgroundColor: 'var(--surface-secondary)',
-                        height: '12px',
-                        borderRadius: '2px',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: '100%',
-                          width: isDone ? '100%' : isInProgress ? '50%' : '15%',
-                          backgroundColor: isDone ? 'var(--color-success)' : isOverdue ? 'var(--color-danger)' : 'var(--accent)',
-                          borderRadius: '2px',
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--text-secondary)' }} className="font-mono">
-                      {formatDate(comp.deadline)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            ) : (
+              <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+                You are currently registered as an individual student for this project.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -774,7 +687,7 @@ export const StudentPBLDetail: React.FC = () => {
       <Modal
         isOpen={proposeModalOpen}
         onClose={() => setProposeModalOpen(false)}
-        title="Propose PBL Project Topic"
+        title="Propose Project Topic"
         footer={
           <>
             <button
@@ -802,7 +715,7 @@ export const StudentPBLDetail: React.FC = () => {
             <input
               type="text"
               className="input-text"
-              placeholder="e.g. Distributed Consensus Engine on Edge IoT"
+              placeholder="e.g. Student Attendance Management System"
               value={topicTitle}
               onChange={e => setTopicTitle(e.target.value)}
               required
@@ -810,11 +723,11 @@ export const StudentPBLDetail: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Brief Description & Problem Statement</label>
+            <label className="form-label">Project Description</label>
             <textarea
               className="textarea-box"
               rows={3}
-              placeholder="Detail the technical requirements and architecture..."
+              placeholder="Brief description of the project and goals..."
               value={topicDesc}
               onChange={e => setTopicDesc(e.target.value)}
             />
@@ -826,19 +739,19 @@ export const StudentPBLDetail: React.FC = () => {
       <Modal
         isOpen={poolModalOpen}
         onClose={() => setPoolModalOpen(false)}
-        title="Select Topic from Faculty Pool"
+        title="Select Topic from List"
         maxWidth="600px"
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-            Choose a verified topic from the faculty curriculum bank.
+            Choose an approved topic for your project.
           </p>
 
           {loadingTopics ? (
             <LoadingState message="Loading available topics..." />
           ) : availableTopics.length === 0 ? (
             <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              No predefined topics are currently registered in this pool.
+              No predefined topics are currently available.
             </div>
           ) : (
             availableTopics.map(t => (

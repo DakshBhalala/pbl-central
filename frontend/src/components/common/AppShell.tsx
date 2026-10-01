@@ -25,24 +25,20 @@ export const AppShell: React.FC = () => {
 
   const getPageTitle = (path: string): string => {
     if (path.includes('/dashboard')) return 'Dashboard';
-    if (path.includes('/pbl/')) return 'PBL Detail';
-    if (path.includes('/pbl')) return 'PBL Activities';
-    if (path.includes('/calendar')) return 'Calendar';
-    if (path.includes('/timeline')) return 'Timeline';
-    if (path.includes('/groups')) return 'Project Groups';
-    if (path.includes('/topics')) return 'Topics';
-    if (path.includes('/reviews')) return 'Reviews';
-    if (path.includes('/analytics')) return 'Analytics';
+    if (path.includes('/pbl/')) return 'Project Details';
+    if (path.includes('/pbl')) return 'PBL Projects';
+    if (path.includes('/calendar')) return 'Academic Calendar';
+    if (path.includes('/reviews')) return 'Submissions & Grading';
+    if (path.includes('/students')) return 'Student Roster';
     if (path.includes('/departments')) return 'Departments';
     if (path.includes('/academic')) return 'Academic Setup';
     if (path.includes('/subjects')) return 'Subjects';
     if (path.includes('/users')) return 'User Accounts';
     if (path.includes('/component-types')) return 'Milestone Types';
-    if (path.includes('/components')) return 'Milestones';
-    if (path.includes('/history')) return 'Archive';
     if (path.includes('/settings')) return 'System Settings';
-    if (path.includes('/profile')) return 'Profile';
-    return 'Workspace';
+    if (path.includes('/notifications')) return 'Notifications';
+    if (path.includes('/profile')) return 'My Profile';
+    return 'Dashboard';
   };
 
   const pageTitle = getPageTitle(location.pathname);

@@ -19,7 +19,7 @@ export const BottomNav: React.FC = () => {
         className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
       >
         <Layers size={18} />
-        <span>PBL</span>
+        <span>Projects</span>
       </NavLink>
 
       <NavLink
@@ -28,14 +28,6 @@ export const BottomNav: React.FC = () => {
       >
         <Calendar size={18} />
         <span>Calendar</span>
-      </NavLink>
-
-      <NavLink
-        to="/student/groups"
-        className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
-      >
-        <Users size={18} />
-        <span>Groups</span>
       </NavLink>
 
       <NavLink

@@ -52,10 +52,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       if (user?.role === 'STUDENT') {
         baseItems.push(
           { id: 'nav-dash', title: 'Dashboard', subtitle: 'Overview of progress and deadlines', category: 'Navigation', icon: Layers, path: '/student/dashboard' },
-          { id: 'nav-pbl', title: 'My PBL Activities', subtitle: 'View all enrolled PBL subjects', category: 'Navigation', icon: BookOpen, path: '/student/pbl' },
+          { id: 'nav-pbl', title: 'My Projects', subtitle: 'View all enrolled PBL subjects', category: 'Navigation', icon: BookOpen, path: '/student/pbl' },
           { id: 'nav-cal', title: 'Academic Calendar', subtitle: 'Deadlines by month and week', category: 'Navigation', icon: Calendar, path: '/student/calendar' },
-          { id: 'nav-time', title: 'Gantt Timeline', subtitle: 'Component milestones timeline', category: 'Navigation', icon: Clock, path: '/student/timeline' },
-          { id: 'nav-grp', title: 'My Project Groups', subtitle: 'Team memberships and join codes', category: 'Navigation', icon: Users, path: '/student/groups' },
           { id: 'nav-prof', title: 'Student Profile', subtitle: 'Contact info and academic details', category: 'Navigation', icon: User, path: '/student/profile' }
         );
 
@@ -78,7 +76,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
               id: `comp-${c.id}`,
               title: c.title,
               subtitle: `Due: ${new Date(c.deadline).toLocaleDateString()}`,
-              category: 'Upcoming Components',
+              category: 'Upcoming Milestones',
               icon: CheckSquare,
               path: `/student/pbl/${c.pbl_activity_id}`
             });
@@ -88,14 +86,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         }
       } else if (user?.role === 'FACULTY') {
         baseItems.push(
-          { id: 'fac-dash', title: 'Faculty Workspace', subtitle: 'Active overview and pending reviews', category: 'Navigation', icon: Layers, path: '/faculty/dashboard' },
-          { id: 'fac-pbl', title: 'PBL Management', subtitle: 'Create, duplicate, and configure PBLs', category: 'Navigation', icon: BookOpen, path: '/faculty/pbl' },
-          { id: 'fac-comp', title: 'Milestone Bank', subtitle: 'All milestone deliverables across subjects', category: 'Navigation', icon: CheckSquare, path: '/faculty/components' },
-          { id: 'fac-rev', title: 'Submission Reviews', subtitle: 'Evaluate student submissions and marks', category: 'Navigation', icon: Sparkles, path: '/faculty/reviews' },
-          { id: 'fac-top', title: 'Topic Pool & Approvals', subtitle: 'Manage student proposed topics', category: 'Navigation', icon: Layers, path: '/faculty/topics' },
-          { id: 'fac-grp', title: 'Group Oversight', subtitle: 'Student project group allocations', category: 'Navigation', icon: Users, path: '/faculty/groups' },
-          { id: 'fac-stu', title: 'Student Roster & CSV', subtitle: 'Import CSV and manage student cohort', category: 'Navigation', icon: Users, path: '/faculty/students' },
-          { id: 'fac-ana', title: 'Performance Analytics', subtitle: 'Subject completion and submission stats', category: 'Navigation', icon: Layers, path: '/faculty/analytics' }
+          { id: 'fac-dash', title: 'Dashboard', subtitle: 'Active overview and pending reviews', category: 'Navigation', icon: Layers, path: '/faculty/dashboard' },
+          { id: 'fac-pbl', title: 'PBL Projects', subtitle: 'Create, duplicate, and configure projects', category: 'Navigation', icon: BookOpen, path: '/faculty/pbl' },
+          { id: 'fac-rev', title: 'Submissions & Reviews', subtitle: 'Evaluate student submissions and marks', category: 'Navigation', icon: Sparkles, path: '/faculty/reviews' },
+          { id: 'fac-stu', title: 'Student Roster', subtitle: 'Class roster and enrolled students', category: 'Navigation', icon: Users, path: '/faculty/students' }
         );
 
         try {
@@ -105,7 +99,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
               id: `fac-pbl-${p.id}`,
               title: p.title,
               subtitle: `${p.subject_name || 'Subject'} · Sem ${p.semester_name || ''}`,
-              category: 'PBL Activities',
+              category: 'PBL Projects',
               icon: BookOpen,
               path: `/faculty/pbl/${p.id}`
             });
@@ -115,15 +109,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         }
       } else if (user?.role === 'ADMIN') {
         baseItems.push(
-          { id: 'adm-dash', title: 'Admin Console', subtitle: 'Institutional overview and statistics', category: 'Navigation', icon: Layers, path: '/admin/dashboard' },
+          { id: 'adm-dash', title: 'Admin Dashboard', subtitle: 'Institutional overview and statistics', category: 'Navigation', icon: Layers, path: '/admin/dashboard' },
           { id: 'adm-dept', title: 'Departments', subtitle: 'Engineering departments directory', category: 'Institution', icon: Layers, path: '/admin/departments' },
-          { id: 'adm-acad', title: 'Programs & Semesters', subtitle: 'Academic years, programs and divisions', category: 'Institution', icon: Calendar, path: '/admin/academic' },
-          { id: 'adm-sub', title: 'Subjects Directory', subtitle: 'Subject codes and semester curriculum', category: 'Institution', icon: BookOpen, path: '/admin/subjects' },
+          { id: 'adm-acad', title: 'Academic Setup', subtitle: 'Academic years, semesters, and divisions', category: 'Institution', icon: Calendar, path: '/admin/academic' },
+          { id: 'adm-sub', title: 'Subjects', subtitle: 'Subject codes and course curriculum', category: 'Institution', icon: BookOpen, path: '/admin/subjects' },
+          { id: 'adm-types', title: 'Milestone Types', subtitle: 'PPT, Report, Poster, Code deliverable formats', category: 'Institution', icon: CheckSquare, path: '/admin/component-types' },
           { id: 'adm-usr', title: 'User Management', subtitle: 'Student enrollment and faculty accounts', category: 'Users', icon: Users, path: '/admin/users' },
-          { id: 'adm-pbl', title: 'PBL Oversight', subtitle: 'Institution-wide PBL activities and status', category: 'PBL', icon: BookOpen, path: '/admin/pbl' },
-          { id: 'adm-types', title: 'Component Types', subtitle: 'PPT, Report, Poster, Lab settings', category: 'PBL', icon: CheckSquare, path: '/admin/component-types' },
-          { id: 'adm-hist', title: 'Academic History', subtitle: 'Archived semester cohorts and records', category: 'History', icon: Clock, path: '/admin/history' },
-          { id: 'adm-sett', title: 'System Settings', subtitle: 'Instance parameters and defaults', category: 'System', icon: Layers, path: '/admin/settings' }
+          { id: 'adm-sett', title: 'System Settings', subtitle: 'Instance parameters and demo database reset', category: 'System', icon: Layers, path: '/admin/settings' }
         );
       }
 

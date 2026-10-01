@@ -11,14 +11,12 @@ import {
   CheckCircle2,
   AlertTriangle,
   FileCheck,
-  Check,
-  X,
   TrendingUp,
   Users,
   Upload,
 } from 'lucide-react';
 import { facultyApi, FacultyDashboardStats, SubmissionRow } from '../../api/faculty';
-import { Topic, PblActivity } from '../../types';
+import { PblActivity } from '../../types';
 import { LoadingState } from '../../components/common/LoadingState';
 import { TableToolbar } from '../../components/common/TableToolbar';
 import { StatusBadge } from '../../components/common/StatusBadge';
@@ -30,7 +28,6 @@ export const FacultyDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<FacultyDashboardStats | null>(null);
   const [analytics, setAnalytics] = useState<any>(null);
-  const [pendingTopics, setPendingTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [density, setDensity] = useState<'compact' | 'comfortable'>('comfortable');
 
@@ -41,24 +38,12 @@ export const FacultyDashboard: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [statsRes, analyticsRes, pblsRes] = await Promise.all([
+      const [statsRes, analyticsRes] = await Promise.all([
         facultyApi.getDashboard(),
         facultyApi.getAnalytics(),
-        facultyApi.getPblActivities().catch(() => [] as PblActivity[]),
       ]);
       setStats(statsRes);
       setAnalytics(analyticsRes);
-
-      if (pblsRes.length > 0) {
-        try {
-          const topicsRes = await facultyApi.getTopics(pblsRes[0].id);
-          setPendingTopics(
-            topicsRes.filter(t => t.status === 'PENDING')
-          );
-        } catch {
-          // ignore
-        }
-      }
     } catch {
       // handled
     } finally {
@@ -81,25 +66,7 @@ export const FacultyDashboard: React.FC = () => {
     }
   };
 
-  const handleApproveTopic = async (topicId: number) => {
-    try {
-      await facultyApi.approveTopic(topicId);
-      loadData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to approve topic');
-    }
-  };
 
-  const handleRejectTopic = async (topicId: number) => {
-    const reason = prompt('Please provide reason for rejecting this topic:');
-    if (!reason) return;
-    try {
-      await facultyApi.rejectTopic(topicId, reason);
-      loadData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to reject topic');
-    }
-  };
 
   if (loading || !stats) return <LoadingState message="Loading faculty management console..." />;
 
@@ -378,102 +345,12 @@ export const FacultyDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Topics Approvals + Faculty Operations Summary + Quick Tools */}
+        {/* RIGHT COLUMN: Faculty Performance Summary + Quick Tools */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
-          {/* 1. TOPIC PROPOSALS DECISION QUEUE */}
+          {/* 1. SEMESTER PERFORMANCE BENCHMARKS */}
           <div className="section-block">
             <div className="section-header">
-              <div>
-                <span className="section-title">Topic Proposals Queue</span>
-                {pendingTopics.length > 0 && (
-                  <span className="badge badge-warning" style={{ marginLeft: '8px', fontSize: '0.6875rem' }}>
-                    {pendingTopics.length} Pending
-                  </span>
-                )}
-              </div>
-              <Link to="/faculty/topics" className="text-secondary hover-underline" style={{ fontSize: '0.75rem' }}>
-                All Topics →
-              </Link>
-            </div>
-
-            {pendingTopics.length === 0 ? (
-              <div
-                style={{
-                  padding: '24px 16px',
-                  backgroundColor: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.8125rem',
-                  color: 'var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                <CheckCircle2 size={16} color="var(--color-success)" />
-                <span>All submitted student topics have been approved or assigned.</span>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {pendingTopics.slice(0, 3).map(topic => (
-                  <div
-                    key={topic.id}
-                    style={{
-                      padding: '12px 14px',
-                      backgroundColor: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 'var(--radius-sm)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--text-primary)' }}>
-                        {topic.title}
-                      </div>
-                      <span className="badge badge-warning" style={{ fontSize: '0.625rem' }}>
-                        Proposed
-                      </span>
-                    </div>
-                    {topic.description && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                        {topic.description}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', paddingTop: '4px' }}>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        style={{ padding: '2px 8px', fontSize: '0.6875rem' }}
-                        onClick={() => handleRejectTopic(topic.id)}
-                      >
-                        <X size={12} />
-                        <span>Reject</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-primary btn-sm"
-                        style={{ padding: '2px 8px', fontSize: '0.6875rem' }}
-                        onClick={() => handleApproveTopic(topic.id)}
-                      >
-                        <Check size={12} />
-                        <span>Approve</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 2. FACULTY OPERATIONAL BENCHMARKS (Linear / Cloudflare institutional density) */}
-          <div className="section-block">
-            <div className="section-header">
-              <span className="section-title">Operational Benchmarks</span>
-              <Link to="/faculty/analytics" className="text-secondary hover-underline" style={{ fontSize: '0.75rem' }}>
-                Full Analytics →
-              </Link>
+              <span className="section-title">Semester Performance</span>
             </div>
 
             <div
@@ -488,36 +365,60 @@ export const FacultyDashboard: React.FC = () => {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Review Backlog</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Pending Reviews</span>
                 <span style={{ fontWeight: 600, color: stats.pending_reviews > 5 ? 'var(--color-warning)' : 'var(--text-primary)' }}>
-                  {stats.pending_reviews} queued
+                  {stats.pending_reviews} submissions
                 </span>
               </div>
               <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Cohort Velocity</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Student Completion</span>
                 <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{avgCompletion}% on track</span>
               </div>
               <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Evaluation Target</span>
-                <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>&lt; 48h SLA</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Review SLA</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>&lt; 48 hours</span>
               </div>
               <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Active Courses</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{stats.active_pbl_count} sections</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Active PBL Courses</span>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{stats.active_pbl_count} courses</span>
               </div>
             </div>
           </div>
 
-          {/* 3. OPERATIONAL SHORTCUTS */}
+          {/* 2. QUICK ACTIONS */}
           <div className="section-block">
             <div className="section-header">
-              <span className="section-title">Curriculum Operations</span>
+              <span className="section-title">Quick Actions</span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <Link
+                to="/faculty/reviews"
+                className="workspace-list-item"
+                style={{
+                  textDecoration: 'none',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '10px 12px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <ClipboardCheck size={15} color="var(--accent)" />
+                  <div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.8125rem' }}>
+                      Review Submissions
+                    </div>
+                    <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+                      Evaluate deliverables and assign marks
+                    </div>
+                  </div>
+                </div>
+                <ArrowRight size={12} color="var(--text-muted)" />
+              </Link>
+
               <Link
                 to="/faculty/students"
                 className="workspace-list-item"
@@ -532,34 +433,10 @@ export const FacultyDashboard: React.FC = () => {
                   <Users size={15} color="var(--accent)" />
                   <div>
                     <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.8125rem' }}>
-                      Roster & Student Imports
+                      Student Roster
                     </div>
                     <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
-                      CSV batch enrollments and division mapping
-                    </div>
-                  </div>
-                </div>
-                <ArrowRight size={12} color="var(--text-muted)" />
-              </Link>
-
-              <Link
-                to="/faculty/groups"
-                className="workspace-list-item"
-                style={{
-                  textDecoration: 'none',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '10px 12px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Layers size={15} color="var(--accent)" />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.8125rem' }}>
-                      Project Group Registry
-                    </div>
-                    <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
-                      Group allocations and topic linkages
+                      View enrolled students and class divisions
                     </div>
                   </div>
                 </div>

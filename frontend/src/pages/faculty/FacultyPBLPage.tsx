@@ -118,11 +118,11 @@ export const FacultyPBLPage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <PageHeader
         breadcrumbs={[
-          { label: 'Faculty Console' },
-          { label: 'PBL Management' },
+          { label: 'Faculty' },
+          { label: 'PBL Projects' },
         ]}
-        title="PBL Activities"
-        subtitle="Manage active curricula, component rubrics, group allocations, and duplicate structures across cohorts"
+        title="PBL Projects"
+        subtitle="Manage course projects, milestones, deadlines, and student submissions"
         actions={
           <button
             type="button"
@@ -130,7 +130,7 @@ export const FacultyPBLPage: React.FC = () => {
             onClick={() => setBuilderOpen(true)}
           >
             <Plus size={14} />
-            <span>Create PBL Activity</span>
+            <span>Create Project</span>
           </button>
         }
       />

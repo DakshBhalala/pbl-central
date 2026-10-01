@@ -71,13 +71,13 @@ export const StudentPBLList: React.FC = () => {
       <PageHeader
         breadcrumbs={[
           { label: 'Student Workspace' },
-          { label: 'My PBL' },
+          { label: 'My Projects' },
         ]}
-        title="My PBL Activities"
-        subtitle="Subject-wise Problem-Based Learning curriculum and milestone tracking"
+        title="My Projects"
+        subtitle="Subject-wise project curriculum and milestone tracking"
       />
 
-      {/* Cloudflare-style Tab Strip */}
+      {/* Status Filter Tab Strip */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', gap: '4px' }}>
         {(['ALL', 'ACTIVE', 'COMPLETED', 'ARCHIVED'] as const).map(tab => {
           const isActive = selectedStatus === tab;
@@ -101,7 +101,7 @@ export const StudentPBLList: React.FC = () => {
                 transition: 'var(--transition-fast)',
               }}
             >
-              <span>{tab === 'ALL' ? 'All Activities' : tab.charAt(0) + tab.slice(1).toLowerCase()}</span>
+              <span>{tab === 'ALL' ? 'All Projects' : tab.charAt(0) + tab.slice(1).toLowerCase()}</span>
               <span
                 style={{
                   fontSize: '0.6875rem',
@@ -140,8 +140,8 @@ export const StudentPBLList: React.FC = () => {
         <div className="section-block" style={{ padding: '24px' }}>
           <EmptyState
             icon={Layers}
-            title="No PBL Activities Found"
-            description="No activities matched your search criteria."
+            title="No Projects Found"
+            description="No projects matched your search criteria."
           />
         </div>
       ) : viewMode === 'list' ? (

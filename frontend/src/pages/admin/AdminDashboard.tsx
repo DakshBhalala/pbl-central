@@ -8,7 +8,6 @@ import {
   FolderTree,
   Settings,
   FileCheck,
-  History,
   ArrowRight,
   ShieldCheck,
   Database,
@@ -61,10 +60,10 @@ export const AdminDashboard: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '1.625rem', fontWeight: 700, letterSpacing: '-0.025em', color: 'var(--text-primary)' }}>
-              Institutional System Console
+              Administrator Dashboard
             </h1>
             <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-              Academic Structure, User Access, and Curriculum Governance
+              Academic Structure, User Management, and System Settings
             </div>
           </div>
 
@@ -512,23 +511,8 @@ export const AdminDashboard: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <FileCheck size={16} color="var(--accent)" />
               <div>
-                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.8125rem' }}>Component Types</div>
+                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.8125rem' }}>Milestone Types</div>
                 <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>PPT, Report, Code, Poster</div>
-              </div>
-            </div>
-            <ArrowRight size={13} color="var(--text-muted)" />
-          </Link>
-
-          <Link
-            to="/admin/history"
-            className="workspace-list-item"
-            style={{ textDecoration: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <History size={16} color="var(--accent)" />
-              <div>
-                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.8125rem' }}>Curriculum Archive</div>
-                <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Past terms & cohorts</div>
               </div>
             </div>
             <ArrowRight size={13} color="var(--text-muted)" />

@@ -38,7 +38,7 @@ export const FacultyPBLDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [togglingStatus, setTogglingStatus] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'components' | 'submissions' | 'groups' | 'topics'>('components');
+  const [activeTab, setActiveTab] = useState<'components' | 'submissions' | 'groups'>('components');
 
   // Modals
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
@@ -196,8 +196,8 @@ export const FacultyPBLDetailPage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <PageHeader
         breadcrumbs={[
-          { label: 'Faculty Console' },
-          { label: 'PBL Activities', path: '/faculty/pbl' },
+          { label: 'Faculty' },
+          { label: 'PBL Projects', path: '/faculty/pbl' },
           { label: pbl.subject_name || pbl.title },
         ]}
         title={pbl.title}
@@ -214,12 +214,12 @@ export const FacultyPBLDetailPage: React.FC = () => {
               disabled={togglingStatus}
               title={
                 isDraft
-                  ? 'Currently hidden. Students cannot see this PBL. Click to publish to students.'
-                  : 'Currently published. Click to hide this PBL from students while editing.'
+                  ? 'Currently hidden. Students cannot see this project. Click to publish to students.'
+                  : 'Currently published. Click to hide this project from students while editing.'
               }
             >
               {isDraft ? <Eye size={14} /> : <EyeOff size={14} />}
-              <span>{isDraft ? 'Publish to Students' : 'Hide PBL (Draft)'}</span>
+              <span>{isDraft ? 'Publish Project' : 'Hide Project (Draft)'}</span>
             </button>
 
             {/* Edit PBL Details Button */}
@@ -335,13 +335,12 @@ export const FacultyPBLDetailPage: React.FC = () => {
         )}
       </div>
 
-      {/* Cloudflare Tab Strip */}
+      {/* Tab Strip */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', gap: '4px' }}>
         {[
           { id: 'components', label: `Milestones (${pbl.components.length})` },
           { id: 'submissions', label: `Submissions (${submissions.length})` },
-          { id: 'groups', label: `Groups (${groups.length})` },
-          { id: 'topics', label: `Topics (${topics.length})` },
+          { id: 'groups', label: `Student Groups (${groups.length})` },
         ].map(tab => {
           const isActive = activeTab === tab.id;
           return (
@@ -549,44 +548,6 @@ export const FacultyPBLDetailPage: React.FC = () => {
                       </td>
                       <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         {formatDate(grp.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 4: TOPICS */}
-      {activeTab === 'topics' && (
-        <div className="panel" style={{ overflow: 'hidden' }}>
-          {topics.length === 0 ? (
-            <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
-              No proposed topics recorded for this activity.
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '30%' }}>Topic Title</th>
-                    <th style={{ width: '40%' }}>Description</th>
-                    <th style={{ width: '15%' }}>Mode</th>
-                    <th style={{ width: '15%', textAlign: 'right' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topics.map(t => (
-                    <tr key={t.id}>
-                      <td style={{ fontWeight: 600 }}>{t.title}</td>
-                      <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t.description || '—'}</td>
-                      <td>
-                        <span className="badge badge-subtle">{t.mode.replace(/_/g, ' ')}</span>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <StatusBadge type="topic" status={t.status} />
                       </td>
                     </tr>
                   ))}

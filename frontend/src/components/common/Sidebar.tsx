@@ -54,11 +54,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
       {
         title: 'WORKSPACE',
         items: [
-          { to: '/student/dashboard', label: 'Overview', icon: LayoutDashboard },
-          { to: '/student/pbl', label: 'My PBL', icon: Layers },
+          { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { to: '/student/pbl', label: 'My Projects', icon: Layers },
           { to: '/student/calendar', label: 'Calendar', icon: Calendar },
-          { to: '/student/timeline', label: 'Timeline', icon: Clock },
-          { to: '/student/groups', label: 'Groups', icon: Users },
         ],
       },
       {
@@ -75,17 +73,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
         title: 'WORKSPACE',
         items: [
           { to: '/faculty/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          { to: '/faculty/pbl', label: 'PBL Activities', icon: Layers },
-          { to: '/faculty/components', label: 'Milestones', icon: ListTodo },
-          { to: '/faculty/groups', label: 'Groups', icon: Users },
-          { to: '/faculty/topics', label: 'Topics', icon: BookOpen },
+          { to: '/faculty/pbl', label: 'PBL Projects', icon: Layers },
         ],
       },
       {
-        title: 'REVIEW',
+        title: 'EVALUATION',
         items: [
           { to: '/faculty/reviews', label: 'Submissions', icon: ClipboardCheck },
-          { to: '/faculty/analytics', label: 'Analytics', icon: BarChart2 },
         ],
       },
       {
@@ -116,20 +110,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
           { to: '/admin/departments', label: 'Departments', icon: Building },
           { to: '/admin/academic', label: 'Academic Setup', icon: FolderTree },
           { to: '/admin/subjects', label: 'Subjects', icon: BookOpen },
+          { to: '/admin/component-types', label: 'Milestone Types', icon: FileCheck },
         ],
       },
       {
         title: 'PEOPLE',
         items: [
           { to: '/admin/users', label: 'Users', icon: Users },
-        ],
-      },
-      {
-        title: 'PBL',
-        items: [
-          { to: '/admin/pbl', label: 'Activities', icon: Layers },
-          { to: '/admin/component-types', label: 'Component Types', icon: FileCheck },
-          { to: '/admin/history', label: 'History', icon: History },
         ],
       },
       {
