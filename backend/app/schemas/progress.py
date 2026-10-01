@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from app.models.progress import ProgressState, SubmissionState
 from app.schemas.pbl import ComponentOut
 from app.schemas.notification import NotificationOut
@@ -35,9 +35,7 @@ class FacultyReviewOut(BaseModel):
     feedback: Optional[str] = None
     is_rejected: bool
     reviewed_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SubjectPblSummary(BaseModel):

@@ -22,7 +22,7 @@ import { LoadingState } from '../../components/common/LoadingState';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
-import { AppSelect } from '../../components/common/AppSelect';
+import { MilestoneModal, MilestoneFormData } from '../../components/faculty/MilestoneModal';
 import { ReviewSubmissionModal } from '../../components/faculty/ReviewSubmissionModal';
 import { formatDateTime, formatDate } from '../../utils/date';
 import { useToast } from '../../context/ToastContext';
@@ -41,34 +41,11 @@ export const FacultyPBLDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'components' | 'submissions' | 'groups' | 'topics'>('components');
 
   // Modals
-  const [addComponentOpen, setAddComponentOpen] = useState(false);
-  const [editComponent, setEditComponent] = useState<Component | null>(null);
+  const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
+  const [activeMilestoneForEdit, setActiveMilestoneForEdit] = useState<Component | null>(null);
   const [editPblOpen, setEditPblOpen] = useState(false);
   const [reviewTarget, setReviewTarget] = useState<SubmissionRow | null>(null);
-
-  // Add component state
   const [componentTypes, setComponentTypes] = useState<ComponentType[]>([]);
-  const [compTypeId, setCompTypeId] = useState<number>(1);
-  const [compTitle, setCompTitle] = useState('');
-  const [compDesc, setCompDesc] = useState('');
-  const [compDeadline, setCompDeadline] = useState(
-    new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 16)
-  );
-  const [compSubUrl, setCompSubUrl] = useState('');
-  const [compClassUrl, setCompClassUrl] = useState('');
-  const [compIsGroup, setCompIsGroup] = useState(false);
-  const [compScope, setCompScope] = useState<'ALL' | 'DIVISION'>('ALL');
-  const [addingComp, setAddingComp] = useState(false);
-
-  // Edit component state
-  const [editCompTypeId, setEditCompTypeId] = useState<number>(1);
-  const [editCompTitle, setEditCompTitle] = useState('');
-  const [editCompDesc, setEditCompDesc] = useState('');
-  const [editCompDeadline, setEditCompDeadline] = useState('');
-  const [editCompSubUrl, setEditCompSubUrl] = useState('');
-  const [editCompClassUrl, setEditCompClassUrl] = useState('');
-  const [editCompIsGroup, setEditCompIsGroup] = useState(false);
-  const [savingComp, setSavingComp] = useState(false);
 
   // Edit PBL state
   const [editPblTitle, setEditPblTitle] = useState('');
@@ -93,7 +70,6 @@ export const FacultyPBLDetailPage: React.FC = () => {
       setGroups(groupsRes);
       setTopics(topicsRes);
       setComponentTypes(ctsRes);
-      if (ctsRes.length > 0) setCompTypeId(ctsRes[0].id);
 
       setEditPblTitle(detailRes.title);
       setEditPblDesc(detailRes.description || '');
@@ -157,78 +133,47 @@ export const FacultyPBLDetailPage: React.FC = () => {
     }
   };
 
-  const handleAddComponent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!id || !compTitle.trim()) return;
+  const handleMilestoneSubmit = async (data: MilestoneFormData) => {
+    if (!id) return;
     try {
-      setAddingComp(true);
-      await facultyApi.addComponent(Number(id), {
-        component_type_id: Number(compTypeId),
-        title: compTitle.trim(),
-        description: compDesc.trim() || null,
-        deadline: new Date(compDeadline).toISOString(),
-        submission_required: true,
-        external_submission_url: compSubUrl.trim() || null,
-        external_classroom_url: compClassUrl.trim() || null,
-        is_group: compIsGroup,
-        assignments: [{ scope_type: compScope, target_id: null }],
-      });
-      setAddComponentOpen(false);
-      setCompTitle('');
-      setCompDesc('');
-      setCompSubUrl('');
-      setCompClassUrl('');
-      toast.success(
-        pbl?.status === 'ACTIVE'
-          ? 'Milestone added successfully! Assigned students have been notified.'
-          : 'Milestone added quietly to draft project.'
-      );
+      if (activeMilestoneForEdit) {
+        await facultyApi.updateComponent(activeMilestoneForEdit.id, {
+          component_type_id: data.component_type_id,
+          title: data.title.trim(),
+          description: data.description.trim() || null,
+          deadline: new Date(data.deadline).toISOString(),
+          submission_required: true,
+          external_submission_url: data.external_submission_url.trim() || null,
+          external_classroom_url: data.external_classroom_url.trim() || null,
+          is_group: data.is_group,
+        });
+        toast.success(
+          pbl?.status === 'ACTIVE'
+            ? 'Milestone updated successfully! Changes reflected to students with notification.'
+            : 'Milestone saved quietly in draft mode.'
+        );
+      } else {
+        await facultyApi.addComponent(Number(id), {
+          component_type_id: data.component_type_id,
+          title: data.title.trim(),
+          description: data.description.trim() || null,
+          deadline: new Date(data.deadline).toISOString(),
+          submission_required: true,
+          external_submission_url: data.external_submission_url.trim() || null,
+          external_classroom_url: data.external_classroom_url.trim() || null,
+          is_group: data.is_group,
+          assignments: [{ scope_type: data.scope_type, target_id: null }],
+        });
+        toast.success(
+          pbl?.status === 'ACTIVE'
+            ? 'Milestone added successfully! Assigned students have been notified.'
+            : 'Milestone added quietly to draft project.'
+        );
+      }
       loadAll();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to add milestone');
-    } finally {
-      setAddingComp(false);
-    }
-  };
-
-  const openEditCompModal = (comp: Component) => {
-    setEditComponent(comp);
-    setEditCompTypeId(comp.component_type_id);
-    setEditCompTitle(comp.title);
-    setEditCompDesc(comp.description || '');
-    setEditCompDeadline(new Date(comp.deadline).toISOString().slice(0, 16));
-    setEditCompSubUrl(comp.external_submission_url || '');
-    setEditCompClassUrl(comp.external_classroom_url || '');
-    setEditCompIsGroup(comp.is_group);
-  };
-
-  const handleSaveComponent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editComponent || !editCompTitle.trim()) return;
-
-    try {
-      setSavingComp(true);
-      await facultyApi.updateComponent(editComponent.id, {
-        component_type_id: Number(editCompTypeId),
-        title: editCompTitle.trim(),
-        description: editCompDesc.trim() || null,
-        deadline: new Date(editCompDeadline).toISOString(),
-        submission_required: true,
-        external_submission_url: editCompSubUrl.trim() || null,
-        external_classroom_url: editCompClassUrl.trim() || null,
-        is_group: editCompIsGroup,
-      });
-      setEditComponent(null);
-      toast.success(
-        pbl?.status === 'ACTIVE'
-          ? 'Milestone updated successfully! Changes reflected to students with notification.'
-          : 'Milestone saved quietly in draft mode.'
-      );
-      loadAll();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update milestone');
-    } finally {
-      setSavingComp(false);
+      toast.error(err.message || 'Failed to save milestone');
+      throw err;
     }
   };
 
@@ -292,7 +237,10 @@ export const FacultyPBLDetailPage: React.FC = () => {
             <button
               type="button"
               className="btn btn-primary btn-sm"
-              onClick={() => setAddComponentOpen(true)}
+              onClick={() => {
+                setActiveMilestoneForEdit(null);
+                setIsMilestoneModalOpen(true);
+              }}
             >
               <Plus size={14} />
               <span>Add Milestone</span>
@@ -481,7 +429,10 @@ export const FacultyPBLDetailPage: React.FC = () => {
                           <button
                             type="button"
                             className="btn btn-secondary btn-icon btn-sm"
-                            onClick={() => openEditCompModal(comp)}
+                            onClick={() => {
+                              setActiveMilestoneForEdit(comp);
+                              setIsMilestoneModalOpen(true);
+                            }}
                             title="Edit milestone deliverable"
                           >
                             <Edit3 size={13} />
@@ -646,231 +597,17 @@ export const FacultyPBLDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: ADD COMPONENT */}
-      <Modal
-        isOpen={addComponentOpen}
-        onClose={() => setAddComponentOpen(false)}
-        title="Add Milestone Deliverable"
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => setAddComponentOpen(false)}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={handleAddComponent}
-              disabled={addingComp}
-            >
-              {addingComp ? 'Adding...' : 'Add Milestone'}
-            </button>
-          </div>
-        }
-      >
-        <form onSubmit={handleAddComponent} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div className="form-group">
-            <label className="form-label">Deliverable Title</label>
-            <input
-              type="text"
-              className="input-text"
-              placeholder="e.g., Literature Survey & Problem Formulation"
-              value={compTitle}
-              onChange={e => setCompTitle(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Deliverable Type</label>
-            <AppSelect
-              value={compTypeId}
-              onChange={val => setCompTypeId(Number(val))}
-              options={componentTypes.map(ct => ({
-                value: ct.id,
-                label: ct.name,
-              }))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Deliverable Instructions</label>
-            <textarea
-              className="input-text"
-              rows={3}
-              placeholder="Provide specific guidelines, evaluation criteria, or file specifications..."
-              value={compDesc}
-              onChange={e => setCompDesc(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Deadline Date & Time</label>
-            <input
-              type="datetime-local"
-              className="input-text"
-              value={compDeadline}
-              onChange={e => setCompDeadline(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">External Submission Google Form URL (Optional)</label>
-            <input
-              type="url"
-              className="input-text"
-              placeholder="https://forms.google.com/..."
-              value={compSubUrl}
-              onChange={e => setCompSubUrl(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Google Classroom / Resource URL (Optional)</label>
-            <input
-              type="url"
-              className="input-text"
-              placeholder="https://classroom.google.com/..."
-              value={compClassUrl}
-              onChange={e => setCompClassUrl(e.target.value)}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8125rem', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={compIsGroup}
-                onChange={e => setCompIsGroup(e.target.checked)}
-              />
-              Group Deliverable
-            </label>
-
-            <AppSelect
-              size="sm"
-              value={compScope}
-              onChange={val => setCompScope(val as any)}
-              style={{ minWidth: '220px' }}
-              options={[
-                { value: 'ALL', label: 'Assign to All Enrolled Students' },
-                { value: 'DIVISION', label: 'Division Level' },
-              ]}
-            />
-          </div>
-        </form>
-      </Modal>
-
-      {/* MODAL: EDIT COMPONENT (FINAL UPDATE BUTTON) */}
-      {editComponent && (
-        <Modal
-          isOpen={!!editComponent}
-          onClose={() => setEditComponent(null)}
-          title="Edit Milestone Deliverable"
-          footer={
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => setEditComponent(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={handleSaveComponent}
-                disabled={savingComp}
-              >
-                {savingComp ? 'Saving...' : 'Update Milestone'}
-              </button>
-            </div>
-          }
-        >
-          <form onSubmit={handleSaveComponent} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div className="form-group">
-              <label className="form-label">Deliverable Title</label>
-              <input
-                type="text"
-                className="input-text"
-                value={editCompTitle}
-                onChange={e => setEditCompTitle(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Deliverable Type</label>
-              <AppSelect
-                value={editCompTypeId}
-                onChange={val => setEditCompTypeId(Number(val))}
-                options={componentTypes.map(ct => ({
-                  value: ct.id,
-                  label: ct.name,
-                }))}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Instructions & Rubric</label>
-              <textarea
-                className="input-text"
-                rows={3}
-                value={editCompDesc}
-                onChange={e => setEditCompDesc(e.target.value)}
-                placeholder="Guidelines or requirements..."
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Deadline Date & Time</label>
-              <input
-                type="datetime-local"
-                className="input-text"
-                value={editCompDeadline}
-                onChange={e => setEditCompDeadline(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">External Submission Form URL</label>
-              <input
-                type="url"
-                className="input-text"
-                value={editCompSubUrl}
-                onChange={e => setEditCompSubUrl(e.target.value)}
-                placeholder="https://forms.google.com/..."
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Google Classroom / Resource URL</label>
-              <input
-                type="url"
-                className="input-text"
-                value={editCompClassUrl}
-                onChange={e => setEditCompClassUrl(e.target.value)}
-                placeholder="https://classroom.google.com/..."
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8125rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={editCompIsGroup}
-                  onChange={e => setEditCompIsGroup(e.target.checked)}
-                />
-                Group-based Task
-              </label>
-            </div>
-          </form>
-        </Modal>
-      )}
+      {/* MODAL: ADD / EDIT MILESTONE DELIVERABLE */}
+      <MilestoneModal
+        isOpen={isMilestoneModalOpen}
+        onClose={() => {
+          setIsMilestoneModalOpen(false);
+          setActiveMilestoneForEdit(null);
+        }}
+        onSubmit={handleMilestoneSubmit}
+        initialData={activeMilestoneForEdit}
+        componentTypes={componentTypes}
+      />
 
       {/* MODAL: EDIT PBL DETAILS */}
       <Modal

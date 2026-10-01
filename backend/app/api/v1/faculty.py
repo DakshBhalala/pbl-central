@@ -474,7 +474,7 @@ def update_pbl_activity(
             raise HTTPException(status_code=403, detail="You are not authorized to update this PBL activity")
 
     old_status = pbl.status
-    update_dict = data.dict(exclude_unset=True)
+    update_dict = data.model_dump(exclude_unset=True)
 
     # Handle faculty assignment updates if provided
     if "faculty_ids" in update_dict and update_dict["faculty_ids"] is not None:
@@ -606,7 +606,7 @@ def update_component(
     if not comp:
         raise HTTPException(status_code=404, detail="Component not found")
 
-    for field, val in data.dict(exclude_unset=True).items():
+    for field, val in data.model_dump(exclude_unset=True).items():
         setattr(comp, field, val)
 
     db.commit()

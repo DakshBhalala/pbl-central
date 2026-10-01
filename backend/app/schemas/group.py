@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class GroupMemberOut(BaseModel):
@@ -9,9 +9,7 @@ class GroupMemberOut(BaseModel):
     student_name: str
     enrollment_number: str
     joined_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectBase(BaseModel):
@@ -44,9 +42,7 @@ class ProjectOut(ProjectBase):
     pbl_activity_id: int
     guide_faculty_name: Optional[str] = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GroupBase(BaseModel):
@@ -68,6 +64,4 @@ class GroupOut(GroupBase):
     members: List[GroupMemberOut] = []
     project: Optional[ProjectOut] = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

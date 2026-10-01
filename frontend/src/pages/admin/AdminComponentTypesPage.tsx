@@ -68,10 +68,10 @@ export const AdminComponentTypesPage: React.FC = () => {
       <PageHeader
         breadcrumbs={[
           { label: 'Admin Console' },
-          { label: 'Component Types' },
+          { label: 'Milestone Types' },
         ]}
-        title="PBL Component Deliverables"
-        subtitle="Manage dynamic deliverables (PPT, Report, Poster, Certification, Mini Project, etc.) and evaluation schemas"
+        title="PBL Milestone Types"
+        subtitle="Manage dynamic milestone deliverables (PPT, Report, Poster, Certification, Mini Project, etc.) and evaluation schemas"
         actions={
           <button
             type="button"

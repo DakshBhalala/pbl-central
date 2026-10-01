@@ -109,7 +109,7 @@ def get_student_dashboard(
         upcoming_deadlines=upcoming_items[:8],
         overdue_items=overdue_items,
         subject_summaries=subject_summaries,
-        recent_notifications=[NotificationOut.from_orm(n) for n in recent_notifs]
+        recent_notifications=[NotificationOut.model_validate(n) for n in recent_notifs]
     )
 
 

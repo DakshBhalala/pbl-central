@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from app.models.user import UserRole
 
 
@@ -66,9 +66,7 @@ class StudentOut(StudentBase):
     semester_name: Optional[str] = None
     division_name: Optional[str] = None
     created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FacultyBase(BaseModel):
@@ -88,9 +86,7 @@ class FacultyOut(FacultyBase):
     user_id: int
     username: Optional[str] = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserOut(UserBase):
@@ -98,9 +94,7 @@ class UserOut(UserBase):
     created_at: datetime
     student_profile: Optional[StudentOut] = None
     faculty_profile: Optional[FacultyOut] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FacultyProfileUpdate(BaseModel):
@@ -126,4 +120,3 @@ class FacultyAdminUpdate(BaseModel):
     phone: Optional[str] = None
     faculty_code: Optional[str] = None
     is_active: Optional[bool] = None
-

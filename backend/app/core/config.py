@@ -1,5 +1,5 @@
 from typing import List
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import AnyHttpUrl, field_validator
 
 
@@ -34,10 +34,11 @@ class Settings(BaseSettings):
     EMAILS_FROM_NAME: str = "PBL Central"
     DEV_EMAIL_LOGGING: bool = True
 
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=".env",
+        extra="ignore"
+    )
 
 
 settings = Settings()

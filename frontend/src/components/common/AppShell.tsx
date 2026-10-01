@@ -37,7 +37,8 @@ export const AppShell: React.FC = () => {
     if (path.includes('/academic')) return 'Academic Setup';
     if (path.includes('/subjects')) return 'Subjects';
     if (path.includes('/users')) return 'User Accounts';
-    if (path.includes('/component-types')) return 'Component Types';
+    if (path.includes('/component-types')) return 'Milestone Types';
+    if (path.includes('/components')) return 'Milestones';
     if (path.includes('/history')) return 'Archive';
     if (path.includes('/settings')) return 'System Settings';
     if (path.includes('/profile')) return 'Profile';

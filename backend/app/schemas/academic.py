@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class DepartmentBase(BaseModel):
@@ -16,9 +16,7 @@ class DepartmentCreate(DepartmentBase):
 
 class DepartmentOut(DepartmentBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProgramBase(BaseModel):
@@ -34,9 +32,7 @@ class ProgramCreate(ProgramBase):
 class ProgramOut(ProgramBase):
     id: int
     department_name: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AcademicYearBase(BaseModel):
@@ -52,9 +48,7 @@ class AcademicYearCreate(AcademicYearBase):
 
 class AcademicYearOut(AcademicYearBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SemesterBase(BaseModel):
@@ -73,9 +67,7 @@ class SemesterOut(SemesterBase):
     id: int
     academic_year_name: Optional[str] = None
     department_name: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DivisionBase(BaseModel):
@@ -91,9 +83,7 @@ class DivisionCreate(DivisionBase):
 class DivisionOut(DivisionBase):
     id: int
     semester_name: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SubjectBase(BaseModel):
@@ -113,6 +103,4 @@ class SubjectOut(SubjectBase):
     id: int
     semester_name: Optional[str] = None
     department_name: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

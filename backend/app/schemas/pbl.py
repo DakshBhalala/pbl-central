@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import Optional, List
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, ConfigDict
 from app.models.pbl import PblStatus, TopicMode, AssignmentScope
 
 
@@ -17,9 +17,7 @@ class ComponentTypeCreate(ComponentTypeBase):
 
 class ComponentTypeOut(ComponentTypeBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ComponentAssignmentCreate(BaseModel):
@@ -39,9 +37,7 @@ class ComponentAssignmentOut(BaseModel):
     target_id: Optional[int] = None
     target_label: Optional[str] = None
     custom_description: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ComponentCreate(BaseModel):
@@ -93,9 +89,7 @@ class ComponentOut(BaseModel):
     student_progress_state: Optional[str] = None  # TODO, IN_PROGRESS, DONE
     student_submission_state: Optional[str] = None  # NOT_SUBMITTED, SUBMITTED, REJECTED
     faculty_feedback: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FacultyAssignment(BaseModel):
@@ -140,9 +134,7 @@ class FacultySimpleOut(BaseModel):
     name: str
     email: Optional[str] = None
     role_description: Optional[str] = "Faculty Guide"
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PblActivityOut(PblActivityBase):
@@ -155,9 +147,7 @@ class PblActivityOut(PblActivityBase):
     faculty_members: List[FacultySimpleOut] = []
     component_count: int = 0
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PblActivityDetailOut(PblActivityOut):

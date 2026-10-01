@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from app.models.pbl import TopicMode
 from app.models.topic import TopicStatus
 
@@ -11,9 +11,7 @@ class TopicHistoryOut(BaseModel):
     changed_by_name: Optional[str] = None
     comment: Optional[str] = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TopicBase(BaseModel):
@@ -51,6 +49,4 @@ class TopicOut(TopicBase):
     rejection_reason: Optional[str] = None
     history: List[TopicHistoryOut] = []
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

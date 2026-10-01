@@ -79,7 +79,7 @@ def list_departments(db: Session = Depends(get_db)):
 
 @router.post("/departments", response_model=DepartmentOut)
 def create_department(data: DepartmentCreate, db: Session = Depends(get_db)):
-    dept = Department(**data.dict())
+    dept = Department(**data.model_dump())
     db.add(dept)
     db.commit()
     db.refresh(dept)
@@ -91,7 +91,7 @@ def update_department(id: int, data: DepartmentCreate, db: Session = Depends(get
     dept = db.query(Department).filter(Department.id == id).first()
     if not dept:
         raise HTTPException(status_code=404, detail="Department not found")
-    for k, v in data.dict().items():
+    for k, v in data.model_dump().items():
         setattr(dept, k, v)
     db.commit()
     db.refresh(dept)
@@ -106,7 +106,7 @@ def list_academic_years(db: Session = Depends(get_db)):
 
 @router.post("/academic-years", response_model=AcademicYearOut)
 def create_academic_year(data: AcademicYearCreate, db: Session = Depends(get_db)):
-    ay = AcademicYear(**data.dict())
+    ay = AcademicYear(**data.model_dump())
     db.add(ay)
     db.commit()
     db.refresh(ay)
@@ -137,7 +137,7 @@ def list_semesters(department_id: Optional[int] = None, db: Session = Depends(ge
 
 @router.post("/semesters", response_model=SemesterOut)
 def create_semester(data: SemesterCreate, db: Session = Depends(get_db)):
-    sem = Semester(**data.dict())
+    sem = Semester(**data.model_dump())
     db.add(sem)
     db.commit()
     db.refresh(sem)
@@ -174,7 +174,7 @@ def list_divisions(semester_id: Optional[int] = None, db: Session = Depends(get_
 
 @router.post("/divisions", response_model=DivisionOut)
 def create_division(data: DivisionCreate, db: Session = Depends(get_db)):
-    div = Division(**data.dict())
+    div = Division(**data.model_dump())
     db.add(div)
     db.commit()
     db.refresh(div)
@@ -214,7 +214,7 @@ def list_subjects(department_id: Optional[int] = None, semester_id: Optional[int
 
 @router.post("/subjects", response_model=SubjectOut)
 def create_subject(data: SubjectCreate, db: Session = Depends(get_db)):
-    sub = Subject(**data.dict())
+    sub = Subject(**data.model_dump())
     db.add(sub)
     db.commit()
     db.refresh(sub)
@@ -239,7 +239,7 @@ def list_component_types(db: Session = Depends(get_db)):
 
 @router.post("/component-types", response_model=ComponentTypeOut)
 def create_component_type(data: ComponentTypeCreate, db: Session = Depends(get_db)):
-    ct = ComponentType(**data.dict())
+    ct = ComponentType(**data.model_dump())
     db.add(ct)
     db.commit()
     db.refresh(ct)
@@ -251,7 +251,7 @@ def update_component_type(id: int, data: ComponentTypeCreate, db: Session = Depe
     ct = db.query(ComponentType).filter(ComponentType.id == id).first()
     if not ct:
         raise HTTPException(status_code=404, detail="Component type not found")
-    for k, v in data.dict().items():
+    for k, v in data.model_dump().items():
         setattr(ct, k, v)
     db.commit()
     db.refresh(ct)

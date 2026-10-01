@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.models.pbl import (
     ComponentAssignment,
     AssignmentScope,
@@ -144,8 +144,8 @@ def test_department_isolation_and_cross_access_prevention(client, student_token,
         department_id=2, # Mechanical Engineering
         academic_year_id=1,
         semester_id=1,
-        start_date=datetime.utcnow().date(),
-        end_date=(datetime.utcnow() + timedelta(days=60)).date(),
+        start_date=datetime.now(timezone.utc).date(),
+        end_date=(datetime.now(timezone.utc) + timedelta(days=60)).date(),
     )
     db.add(other_pbl)
     db.commit()
@@ -155,7 +155,7 @@ def test_department_isolation_and_cross_access_prevention(client, student_token,
         pbl_activity_id=other_pbl.id,
         component_type_id=1,
         title="Mechanical CAD Drawing",
-        deadline=datetime.utcnow() + timedelta(days=30),
+        deadline=datetime.now(timezone.utc) + timedelta(days=30),
     )
     db.add(other_comp)
     db.commit()

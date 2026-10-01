@@ -76,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
         items: [
           { to: '/faculty/dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { to: '/faculty/pbl', label: 'PBL Activities', icon: Layers },
-          { to: '/faculty/components', label: 'Components', icon: ListTodo },
+          { to: '/faculty/components', label: 'Milestones', icon: ListTodo },
           { to: '/faculty/groups', label: 'Groups', icon: Users },
           { to: '/faculty/topics', label: 'Topics', icon: BookOpen },
         ],

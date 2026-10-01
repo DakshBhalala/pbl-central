@@ -28,7 +28,7 @@ def get_user_notifications(
     )
     return {
         "unread_count": unread_count,
-        "notifications": [NotificationOut.from_orm(n) for n in notifs]
+        "notifications": [NotificationOut.model_validate(n) for n in notifs]
     }
 
 

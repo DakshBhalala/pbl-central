@@ -90,7 +90,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         baseItems.push(
           { id: 'fac-dash', title: 'Faculty Workspace', subtitle: 'Active overview and pending reviews', category: 'Navigation', icon: Layers, path: '/faculty/dashboard' },
           { id: 'fac-pbl', title: 'PBL Management', subtitle: 'Create, duplicate, and configure PBLs', category: 'Navigation', icon: BookOpen, path: '/faculty/pbl' },
-          { id: 'fac-comp', title: 'Component Bank', subtitle: 'All component assignments across subjects', category: 'Navigation', icon: CheckSquare, path: '/faculty/components' },
+          { id: 'fac-comp', title: 'Milestone Bank', subtitle: 'All milestone deliverables across subjects', category: 'Navigation', icon: CheckSquare, path: '/faculty/components' },
           { id: 'fac-rev', title: 'Submission Reviews', subtitle: 'Evaluate student submissions and marks', category: 'Navigation', icon: Sparkles, path: '/faculty/reviews' },
           { id: 'fac-top', title: 'Topic Pool & Approvals', subtitle: 'Manage student proposed topics', category: 'Navigation', icon: Layers, path: '/faculty/topics' },
           { id: 'fac-grp', title: 'Group Oversight', subtitle: 'Student project group allocations', category: 'Navigation', icon: Users, path: '/faculty/groups' },

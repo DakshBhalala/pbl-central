@@ -49,9 +49,9 @@ export const FacultyComponentsPage: React.FC = () => {
       <PageHeader
         breadcrumbs={[
           { label: 'Faculty Console' },
-          { label: 'Component Registry' },
+          { label: 'Milestones' },
         ]}
-        title="Component Registry"
+        title="Milestone Registry"
         subtitle="Universal index of all milestone assignments, deadlines, and submission links across PBL subjects"
       />
 

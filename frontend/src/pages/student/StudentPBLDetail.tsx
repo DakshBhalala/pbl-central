@@ -297,7 +297,7 @@ export const StudentPBLDetail: React.FC = () => {
                   <thead>
                     <tr>
                       <th style={{ width: '6%', textAlign: 'center' }}>#</th>
-                      <th style={{ width: '35%' }}>Component Deliverable</th>
+                      <th style={{ width: '35%' }}>Milestone Deliverable</th>
                       <th style={{ width: '15%' }}>Type</th>
                       <th style={{ width: '18%' }}>Deadline</th>
                       <th style={{ width: '14%' }}>Status</th>
@@ -601,7 +601,7 @@ export const StudentPBLDetail: React.FC = () => {
       <Drawer
         isOpen={Boolean(selectedComponent)}
         onClose={() => setSelectedComponent(null)}
-        title={selectedComponent?.title || 'Component Deliverable'}
+        title={selectedComponent?.title || 'Milestone Deliverable'}
         subtitle={`${pbl.subject_name || 'Subject'} · ${selectedComponent?.component_type_name || ''}`}
         width="480px"
       >
