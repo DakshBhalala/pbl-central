@@ -31,7 +31,6 @@ import { AdminSubjectsPage } from '../pages/admin/AdminSubjectsPage';
 import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
 import { AdminComponentTypesPage } from '../pages/admin/AdminComponentTypesPage';
 import { AdminSettingsPage } from '../pages/admin/AdminSettingsPage';
-import { AdminStoragePage } from '../pages/admin/AdminStoragePage';
 
 export const AppRouter: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -117,7 +116,6 @@ export const AppRouter: React.FC = () => {
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="component-types" element={<AdminComponentTypesPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
-        <Route path="storage" element={<AdminStoragePage />} />
 
         {/* Graceful redirects for removed features */}
         <Route path="pbl" element={<Navigate to="/admin/dashboard" replace />} />

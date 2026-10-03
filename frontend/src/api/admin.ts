@@ -140,39 +140,4 @@ export const adminApi = {
       method: 'POST',
     });
   },
-
-  // Database Storage Overview
-  getStorageOverview: async (): Promise<StorageOverviewResponse> => {
-    return apiClient<StorageOverviewResponse>('/admin/storage-overview');
-  },
 };
-
-export interface TableColumnInfo {
-  name: string;
-  type: string;
-  nullable: boolean;
-  primary_key: boolean;
-}
-
-export interface TableForeignKeyInfo {
-  constrained_columns: string[];
-  referred_table: string;
-  referred_columns: string[];
-}
-
-export interface TableStorageInfo {
-  name: string;
-  row_count: number;
-  column_count: number;
-  columns: TableColumnInfo[];
-  foreign_keys: TableForeignKeyInfo[];
-  sample_rows: Record<string, any>[];
-}
-
-export interface StorageOverviewResponse {
-  engine: string;
-  database_file: string;
-  total_tables: number;
-  tables: TableStorageInfo[];
-}
-

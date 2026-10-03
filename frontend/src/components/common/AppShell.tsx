@@ -35,7 +35,6 @@ export const AppShell: React.FC = () => {
     if (path.includes('/subjects')) return 'Subjects';
     if (path.includes('/users')) return 'User Accounts';
     if (path.includes('/component-types')) return 'Milestone Types';
-    if (path.includes('/storage')) return 'Database Storage';
     if (path.includes('/settings')) return 'System Settings';
     if (path.includes('/notifications')) return 'Notifications';
     if (path.includes('/profile')) return 'My Profile';

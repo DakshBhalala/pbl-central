@@ -85,10 +85,6 @@ export const AdminDashboard: React.FC = () => {
               <RotateCcw size={13} />
               <span>Reset to Demo Data</span>
             </button>
-            <Link to="/admin/storage" className="btn btn-secondary btn-sm" title="Inspect database storage, tables, and live schema records">
-              <Database size={13} />
-              <span>Storage Explorer</span>
-            </Link>
             <Link to="/admin/users" className="btn btn-secondary btn-sm">
               <Users size={13} />
               <span>Manage Users</span>
@@ -517,21 +513,6 @@ export const AdminDashboard: React.FC = () => {
               <div>
                 <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.8125rem' }}>Milestone Types</div>
                 <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>PPT, Report, Code, Poster</div>
-              </div>
-            </div>
-            <ArrowRight size={13} color="var(--text-muted)" />
-          </Link>
-
-          <Link
-            to="/admin/storage"
-            className="workspace-list-item"
-            style={{ textDecoration: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Database size={16} color="var(--accent)" />
-              <div>
-                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.8125rem' }}>Database Storage</div>
-                <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>23 tables · Live Schema Explorer</div>
               </div>
             </div>
             <ArrowRight size={13} color="var(--text-muted)" />
