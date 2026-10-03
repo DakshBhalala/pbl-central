@@ -65,13 +65,16 @@ def seed_database(db: Session = None, reset: bool = False):
     sem_3 = Semester(name="Semester 3", number=3, academic_year_id=ay_current.id, department_id=dept_ce.id)
     sem_5 = Semester(name="Semester 5", number=5, academic_year_id=ay_current.id, department_id=dept_ce.id)
     sem_7 = Semester(name="Semester 7", number=7, academic_year_id=ay_current.id, department_id=dept_ce.id)
-    db.add_all([sem_3, sem_5, sem_7])
+    sem_5_it = Semester(name="Semester 5", number=5, academic_year_id=ay_current.id, department_id=dept_it.id)
+    db.add_all([sem_3, sem_5, sem_7, sem_5_it])
     db.flush()
 
     # 5. Divisions
     div_a = Division(name="A", semester_id=sem_5.id, department_id=dept_ce.id)
     div_b = Division(name="B", semester_id=sem_5.id, department_id=dept_ce.id)
-    db.add_all([div_a, div_b])
+    div_3a = Division(name="A", semester_id=sem_3.id, department_id=dept_ce.id)
+    div_it_a = Division(name="A", semester_id=sem_5_it.id, department_id=dept_it.id)
+    db.add_all([div_a, div_b, div_3a, div_it_a])
     db.flush()
 
     # 6. Subjects (Realistic Academic Offerings)
@@ -127,30 +130,92 @@ def seed_database(db: Session = None, reset: bool = False):
     # 8. User Accounts
     # Admin
     u_admin = User(username="admin", password_hash=get_password_hash("Admin@123"), role=UserRole.ADMIN)
-    # Faculty
+    
+    # Faculty Accounts (CE, IT, ME)
     u_fac1 = User(username="faculty01", password_hash=get_password_hash("Faculty@123"), role=UserRole.FACULTY)
     u_fac2 = User(username="faculty02", password_hash=get_password_hash("Faculty@123"), role=UserRole.FACULTY)
-    # Students
+    u_fac3 = User(username="faculty03", password_hash=get_password_hash("Faculty@123"), role=UserRole.FACULTY)
+    u_fac4 = User(username="faculty04", password_hash=get_password_hash("Faculty@123"), role=UserRole.FACULTY)
+    u_fac5 = User(username="faculty05", password_hash=get_password_hash("Faculty@123"), role=UserRole.FACULTY)
+    u_fac6 = User(username="faculty06", password_hash=get_password_hash("Faculty@123"), role=UserRole.FACULTY)
+    u_fac7 = User(username="faculty07", password_hash=get_password_hash("Faculty@123"), role=UserRole.FACULTY)
+    u_fac8 = User(username="faculty08", password_hash=get_password_hash("Faculty@123"), role=UserRole.FACULTY)
+
+    # Student Accounts (CE Sem 5 Div A & B, CE Sem 3, IT Sem 5)
     u_stu1 = User(username="230101", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
     u_stu2 = User(username="230102", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
     u_stu3 = User(username="230103", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
     u_stu4 = User(username="230104", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu5 = User(username="230105", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu6 = User(username="230106", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu7 = User(username="230107", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu8 = User(username="230108", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu9 = User(username="230109", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu10 = User(username="230110", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu11 = User(username="230111", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu12 = User(username="230112", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu13 = User(username="230113", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu14 = User(username="230114", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu15 = User(username="240101", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu16 = User(username="240102", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu17 = User(username="240103", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu18 = User(username="230201", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu19 = User(username="230202", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
+    u_stu20 = User(username="230203", password_hash=get_password_hash("Student@123"), role=UserRole.STUDENT)
 
-    db.add_all([u_admin, u_fac1, u_fac2, u_stu1, u_stu2, u_stu3, u_stu4])
+    db.add_all([
+        u_admin,
+        u_fac1, u_fac2, u_fac3, u_fac4, u_fac5, u_fac6, u_fac7, u_fac8,
+        u_stu1, u_stu2, u_stu3, u_stu4, u_stu5, u_stu6, u_stu7, u_stu8,
+        u_stu9, u_stu10, u_stu11, u_stu12, u_stu13, u_stu14,
+        u_stu15, u_stu16, u_stu17,
+        u_stu18, u_stu19, u_stu20
+    ])
     db.flush()
 
     # Faculty Profiles
     f_sharma = Faculty(user_id=u_fac1.id, faculty_code="FAC-CE-01", name="Dr. Rajesh Sharma", department_id=dept_ce.id, email="rajesh.sharma@college.edu", phone="+91 98765 43210")
     f_verma = Faculty(user_id=u_fac2.id, faculty_code="FAC-CE-02", name="Prof. Ananya Verma", department_id=dept_ce.id, email="ananya.verma@college.edu", phone="+91 98765 43211")
-    db.add_all([f_sharma, f_verma])
+    f_kulkarni = Faculty(user_id=u_fac3.id, faculty_code="FAC-CE-03", name="Prof. Sneha Kulkarni", department_id=dept_ce.id, email="sneha.kulkarni@college.edu", phone="+91 98765 43212")
+    f_trivedi = Faculty(user_id=u_fac4.id, faculty_code="FAC-CE-04", name="Dr. Amit Trivedi", department_id=dept_ce.id, email="amit.trivedi@college.edu", phone="+91 98765 43213")
+    f_gupta = Faculty(user_id=u_fac5.id, faculty_code="FAC-CE-05", name="Prof. Neha Gupta", department_id=dept_ce.id, email="neha.gupta@college.edu", phone="+91 98765 43214")
+    f_pandya = Faculty(user_id=u_fac6.id, faculty_code="FAC-IT-01", name="Dr. Manoj Pandya", department_id=dept_it.id, email="manoj.pandya@college.edu", phone="+91 98765 43215")
+    f_deshmukh = Faculty(user_id=u_fac7.id, faculty_code="FAC-IT-02", name="Prof. Ritu Deshmukh", department_id=dept_it.id, email="ritu.deshmukh@college.edu", phone="+91 98765 43216")
+    f_rathod = Faculty(user_id=u_fac8.id, faculty_code="FAC-ME-01", name="Dr. Suresh Rathod", department_id=dept_me.id, email="suresh.rathod@college.edu", phone="+91 98765 43217")
+    db.add_all([f_sharma, f_verma, f_kulkarni, f_trivedi, f_gupta, f_pandya, f_deshmukh, f_rathod])
     db.flush()
 
     # Student Profiles
     s_rahul = Student(user_id=u_stu1.id, enrollment_number="230101", name="Rahul Patel", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_a.id, email="rahul.patel@college.edu", phone_number="+91 91234 56780")
     s_aarav = Student(user_id=u_stu2.id, enrollment_number="230102", name="Aarav Shah", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_a.id, email="aarav.shah@college.edu", phone_number="+91 91234 56781")
     s_priya = Student(user_id=u_stu3.id, enrollment_number="230103", name="Priya Mehta", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_a.id, email="priya.mehta@college.edu", phone_number="+91 91234 56782")
+    s_rohan = Student(user_id=u_stu5.id, enrollment_number="230105", name="Rohan Desai", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_a.id, email="rohan.desai@college.edu", phone_number="+91 91234 56784")
+    s_ananya = Student(user_id=u_stu6.id, enrollment_number="230106", name="Ananya Iyer", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_a.id, email="ananya.iyer@college.edu", phone_number="+91 91234 56785")
+    s_devansh = Student(user_id=u_stu7.id, enrollment_number="230107", name="Devansh Dave", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_a.id, email="devansh.dave@college.edu", phone_number="+91 91234 56786")
+    s_diya = Student(user_id=u_stu8.id, enrollment_number="230108", name="Diya Trivedi", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_a.id, email="diya.trivedi@college.edu", phone_number="+91 91234 56787")
+
     s_vikram = Student(user_id=u_stu4.id, enrollment_number="230104", name="Vikram Joshi", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_b.id, email="vikram.joshi@college.edu", phone_number="+91 91234 56783")
-    db.add_all([s_rahul, s_aarav, s_priya, s_vikram])
+    s_kavya = Student(user_id=u_stu9.id, enrollment_number="230109", name="Kavya Nair", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_b.id, email="kavya.nair@college.edu", phone_number="+91 91234 56788")
+    s_harshil = Student(user_id=u_stu10.id, enrollment_number="230110", name="Harshil Vora", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_b.id, email="harshil.vora@college.edu", phone_number="+91 91234 56789")
+    s_meera = Student(user_id=u_stu11.id, enrollment_number="230111", name="Meera Bhatia", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_b.id, email="meera.bhatia@college.edu", phone_number="+91 91234 56790")
+    s_yash = Student(user_id=u_stu12.id, enrollment_number="230112", name="Yash Rathore", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_b.id, email="yash.rathore@college.edu", phone_number="+91 91234 56791")
+    s_aryan = Student(user_id=u_stu13.id, enrollment_number="230113", name="Aryan Kothari", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_b.id, email="aryan.kothari@college.edu", phone_number="+91 91234 56792")
+    s_pooja = Student(user_id=u_stu14.id, enrollment_number="230114", name="Pooja Solanki", department_id=dept_ce.id, semester_id=sem_5.id, division_id=div_b.id, email="pooja.solanki@college.edu", phone_number="+91 91234 56793")
+
+    s_aditya = Student(user_id=u_stu15.id, enrollment_number="240101", name="Aditya Rao", department_id=dept_ce.id, semester_id=sem_3.id, division_id=div_3a.id, email="aditya.rao@college.edu", phone_number="+91 91234 56794")
+    s_ishita = Student(user_id=u_stu16.id, enrollment_number="240102", name="Ishita Sen", department_id=dept_ce.id, semester_id=sem_3.id, division_id=div_3a.id, email="ishita.sen@college.edu", phone_number="+91 91234 56795")
+    s_tanmay = Student(user_id=u_stu17.id, enrollment_number="240103", name="Tanmay Kulkarni", department_id=dept_ce.id, semester_id=sem_3.id, division_id=div_3a.id, email="tanmay.kulkarni@college.edu", phone_number="+91 91234 56796")
+
+    s_karan = Student(user_id=u_stu18.id, enrollment_number="230201", name="Karan Singhania", department_id=dept_it.id, semester_id=sem_5_it.id, division_id=div_it_a.id, email="karan.singhania@college.edu", phone_number="+91 91234 56797")
+    s_snehal = Student(user_id=u_stu19.id, enrollment_number="230202", name="Snehal Patil", department_id=dept_it.id, semester_id=sem_5_it.id, division_id=div_it_a.id, email="snehal.patil@college.edu", phone_number="+91 91234 56798")
+    s_pranav = Student(user_id=u_stu20.id, enrollment_number="230203", name="Pranav Menon", department_id=dept_it.id, semester_id=sem_5_it.id, division_id=div_it_a.id, email="pranav.menon@college.edu", phone_number="+91 91234 56799")
+
+    db.add_all([
+        s_rahul, s_aarav, s_priya, s_rohan, s_ananya, s_devansh, s_diya,
+        s_vikram, s_kavya, s_harshil, s_meera, s_yash, s_aryan, s_pooja,
+        s_aditya, s_ishita, s_tanmay,
+        s_karan, s_snehal, s_pranav
+    ])
     db.flush()
 
     # 9. PBL Activities (Current Semester 5)
@@ -240,11 +305,17 @@ def seed_database(db: Session = None, reset: bool = False):
     db.add_all([
         PblFaculty(pbl_activity_id=pbl_cn.id, faculty_id=f_sharma.id, role_description="Lead Coordinator"),
         PblFaculty(pbl_activity_id=pbl_cn.id, faculty_id=f_verma.id, role_description="Lab Evaluator"),
+        PblFaculty(pbl_activity_id=pbl_cn.id, faculty_id=f_gupta.id, role_description="Network Security Guide"),
         PblFaculty(pbl_activity_id=pbl_db.id, faculty_id=f_verma.id, role_description="Lead Coordinator"),
+        PblFaculty(pbl_activity_id=pbl_db.id, faculty_id=f_gupta.id, role_description="Query Evaluator"),
         PblFaculty(pbl_activity_id=pbl_os.id, faculty_id=f_sharma.id, role_description="Lead Coordinator"),
+        PblFaculty(pbl_activity_id=pbl_os.id, faculty_id=f_kulkarni.id, role_description="Concurrency Guide"),
         PblFaculty(pbl_activity_id=pbl_se.id, faculty_id=f_verma.id, role_description="Lead Coordinator"),
+        PblFaculty(pbl_activity_id=pbl_se.id, faculty_id=f_trivedi.id, role_description="Agile Scrum Mentor"),
         PblFaculty(pbl_activity_id=pbl_ai.id, faculty_id=f_sharma.id, role_description="Lead Coordinator"),
+        PblFaculty(pbl_activity_id=pbl_ai.id, faculty_id=f_kulkarni.id, role_description="AI Lead Mentor"),
         PblFaculty(pbl_activity_id=pbl_wad.id, faculty_id=f_sharma.id, role_description="Lead Coordinator"),
+        PblFaculty(pbl_activity_id=pbl_wad.id, faculty_id=f_trivedi.id, role_description="Full Stack Guide"),
     ])
     db.flush()
 
@@ -470,8 +541,92 @@ def seed_database(db: Session = None, reset: bool = False):
     ])
     db.flush()
 
-    # 13. Student Progress & Faculty Evaluations for Rahul Patel (230101)
-    # Certification completed & ACCEPTED with faculty feedback
+    # Group Gamma in Computer Networks (Rohan Desai + Ananya Iyer + Devansh Dave)
+    grp_cn2 = Group(
+        pbl_activity_id=pbl_cn.id,
+        group_name="Packet Sniffers",
+        group_code="GRP-CN-02",
+        created_by=u_fac1.id
+    )
+    db.add(grp_cn2)
+    db.flush()
+    db.add_all([
+        GroupMember(group_id=grp_cn2.id, student_id=s_rohan.id),
+        GroupMember(group_id=grp_cn2.id, student_id=s_ananya.id),
+        GroupMember(group_id=grp_cn2.id, student_id=s_devansh.id)
+    ])
+    db.flush()
+
+    proj_cn2 = Project(
+        group_id=grp_cn2.id,
+        pbl_activity_id=pbl_cn.id,
+        title="Software-Defined Network Topology Controller",
+        topic="SDN Flow Routing",
+        description="Implementing centralized OpenFlow controller for intelligent packet steering across campus subnets.",
+        guide_faculty_id=f_gupta.id,
+        status="In Progress",
+        external_url="https://github.com/sample-org/sdn-controller"
+    )
+    db.add(proj_cn2)
+
+    # Group Delta in Computer Networks (Kavya Nair + Harshil Vora + Meera Bhatia)
+    grp_cn3 = Group(
+        pbl_activity_id=pbl_cn.id,
+        group_name="ByteForge",
+        group_code="GRP-CN-03",
+        created_by=u_fac1.id
+    )
+    db.add(grp_cn3)
+    db.flush()
+    db.add_all([
+        GroupMember(group_id=grp_cn3.id, student_id=s_kavya.id),
+        GroupMember(group_id=grp_cn3.id, student_id=s_harshil.id),
+        GroupMember(group_id=grp_cn3.id, student_id=s_meera.id)
+    ])
+    db.flush()
+
+    proj_cn3 = Project(
+        group_id=grp_cn3.id,
+        pbl_activity_id=pbl_cn.id,
+        title="Zero-Trust Mesh Network for IoT Campus Sensors",
+        topic="Network Security & Zero Trust",
+        description="Securing sensor nodes with mutual TLS authentication and micro-segmented network policies.",
+        guide_faculty_id=f_sharma.id,
+        status="In Progress",
+        external_url="https://github.com/sample-org/zero-trust-mesh"
+    )
+    db.add(proj_cn3)
+
+    # Group Epsilon in DBMS (Diya Trivedi + Yash Rathore + Aryan Kothari)
+    grp_db2 = Group(
+        pbl_activity_id=pbl_db.id,
+        group_name="DataWeavers",
+        group_code="GRP-DB-03",
+        created_by=u_fac2.id
+    )
+    db.add(grp_db2)
+    db.flush()
+    db.add_all([
+        GroupMember(group_id=grp_db2.id, student_id=s_diya.id),
+        GroupMember(group_id=grp_db2.id, student_id=s_yash.id),
+        GroupMember(group_id=grp_db2.id, student_id=s_aryan.id)
+    ])
+    db.flush()
+
+    proj_db2 = Project(
+        group_id=grp_db2.id,
+        pbl_activity_id=pbl_db.id,
+        title="Distributed Key-Value Store with Raft Consensus",
+        topic="Distributed Database Systems",
+        description="Fault-tolerant partitioned transaction storage engine with consensus replication.",
+        guide_faculty_id=f_verma.id,
+        status="In Progress",
+        external_url="https://github.com/sample-org/raft-kv-store"
+    )
+    db.add(proj_db2)
+
+    # 13. Student Progress & Faculty Evaluations
+    # Rahul Patel (230101)
     p_db_cert = StudentComponentProgress(
         student_id=s_rahul.id,
         component_id=c_db_cert.id,
@@ -482,7 +637,6 @@ def seed_database(db: Session = None, reset: bool = False):
         reviewed_by_faculty_id=f_verma.id,
         reviewed_at=now - timedelta(days=4)
     )
-    # Case study completed & ACCEPTED with faculty feedback
     p_se_case = StudentComponentProgress(
         student_id=s_rahul.id,
         component_id=c_se_case.id,
@@ -493,21 +647,18 @@ def seed_database(db: Session = None, reset: bool = False):
         reviewed_by_faculty_id=f_sharma.id,
         reviewed_at=now - timedelta(days=2)
     )
-    # Wireshark in progress
     p_cn_exp = StudentComponentProgress(
         student_id=s_rahul.id,
         component_id=c_cn_exp.id,
         progress_state=ProgressState.IN_PROGRESS,
         submission_state=SubmissionState.NOT_SUBMITTED
     )
-    # ER Diagram overdue & not submitted
     p_db_rep = StudentComponentProgress(
         student_id=s_rahul.id,
         component_id=c_db_rep.id,
         progress_state=ProgressState.TODO,
         submission_state=SubmissionState.NOT_SUBMITTED
     )
-    # PPT in progress & submitted for faculty review
     p_cn_ppt = StudentComponentProgress(
         student_id=s_rahul.id,
         component_id=c_cn_ppt.id,
@@ -516,7 +667,119 @@ def seed_database(db: Session = None, reset: bool = False):
         submitted_at=now - timedelta(days=1)
     )
 
-    db.add_all([p_db_cert, p_se_case, p_cn_exp, p_db_rep, p_cn_ppt])
+    # Aarav Shah (230102)
+    p_aarav_ppt = StudentComponentProgress(
+        student_id=s_aarav.id,
+        component_id=c_cn_ppt.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.SUBMITTED,
+        submitted_at=now - timedelta(days=1)
+    )
+    p_aarav_db = StudentComponentProgress(
+        student_id=s_aarav.id,
+        component_id=c_db_cert.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.ACCEPTED,
+        submitted_at=now - timedelta(days=4),
+        faculty_feedback="Stanford Online Database course certificate verified. Excellent work.",
+        reviewed_by_faculty_id=f_verma.id,
+        reviewed_at=now - timedelta(days=3)
+    )
+
+    # Priya Mehta (230103)
+    p_priya_ppt = StudentComponentProgress(
+        student_id=s_priya.id,
+        component_id=c_cn_ppt.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.SUBMITTED,
+        submitted_at=now - timedelta(hours=14)
+    )
+    p_priya_case = StudentComponentProgress(
+        student_id=s_priya.id,
+        component_id=c_se_case.id,
+        progress_state=ProgressState.IN_PROGRESS,
+        submission_state=SubmissionState.REJECTED,
+        submitted_at=now - timedelta(days=2),
+        faculty_feedback="UML sequence diagrams are missing error handling flow. Please revise and resubmit.",
+        reviewed_by_faculty_id=f_verma.id,
+        reviewed_at=now - timedelta(days=1)
+    )
+
+    # Rohan Desai (230105)
+    p_rohan_exp = StudentComponentProgress(
+        student_id=s_rohan.id,
+        component_id=c_cn_exp.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.SUBMITTED,
+        submitted_at=now - timedelta(hours=5)
+    )
+
+    # Ananya Iyer (230106)
+    p_ananya_ppt = StudentComponentProgress(
+        student_id=s_ananya.id,
+        component_id=c_cn_ppt.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.ACCEPTED,
+        submitted_at=now - timedelta(days=2),
+        faculty_feedback="Exceptional slide design and crisp OSI explanation.",
+        reviewed_by_faculty_id=f_sharma.id,
+        reviewed_at=now - timedelta(days=1)
+    )
+    p_ananya_case = StudentComponentProgress(
+        student_id=s_ananya.id,
+        component_id=c_se_case.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.SUBMITTED,
+        submitted_at=now - timedelta(hours=8)
+    )
+
+    # Kavya Nair (230109)
+    p_kavya_exp = StudentComponentProgress(
+        student_id=s_kavya.id,
+        component_id=c_cn_exp.id,
+        progress_state=ProgressState.IN_PROGRESS,
+        submission_state=SubmissionState.REJECTED,
+        submitted_at=now - timedelta(days=2),
+        faculty_feedback="Packet capture file was truncated. Please upload full .pcapng trace.",
+        reviewed_by_faculty_id=f_sharma.id,
+        reviewed_at=now - timedelta(days=1)
+    )
+    p_kavya_db = StudentComponentProgress(
+        student_id=s_kavya.id,
+        component_id=c_db_rep.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.SUBMITTED,
+        submitted_at=now - timedelta(hours=3)
+    )
+
+    # Harshil Vora (230110)
+    p_harshil_cert = StudentComponentProgress(
+        student_id=s_harshil.id,
+        component_id=c_db_cert.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.SUBMITTED,
+        submitted_at=now - timedelta(hours=10)
+    )
+
+    # Diya Trivedi (230108)
+    p_diya_exp = StudentComponentProgress(
+        student_id=s_diya.id,
+        component_id=c_cn_exp.id,
+        progress_state=ProgressState.DONE,
+        submission_state=SubmissionState.SUBMITTED,
+        submitted_at=now - timedelta(hours=6)
+    )
+
+    db.add_all([
+        p_db_cert, p_se_case, p_cn_exp, p_db_rep, p_cn_ppt,
+        p_aarav_ppt, p_aarav_db,
+        p_priya_ppt, p_priya_case,
+        p_rohan_exp,
+        p_ananya_ppt, p_ananya_case,
+        p_kavya_exp, p_kavya_db,
+        p_harshil_cert,
+        p_diya_exp
+    ])
     db.flush()
 
     # 14. Notifications for Rahul Patel

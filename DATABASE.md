@@ -332,14 +332,34 @@ stateDiagram-v2
 ## 7. Demo Seed Data Verification
 
 The demo database is pre-populated with realistic academic data:
-- **1 Department**: Computer Engineering (`CE`)
+- **3 Departments**: Computer Engineering (`CE`), Information Technology (`IT`), Mechanical Engineering (`ME`)
 - **1 Academic Year**: 2026–27 (`ay_current`)
-- **3 Semesters**: Semester 3, Semester 5, Semester 7
-- **2 Divisions**: Division A and Division B
+- **4 Semesters**: Semester 3 (CE), Semester 5 (CE), Semester 7 (CE), Semester 5 (IT)
+- **4 Divisions**: Sem 5 Div A & B (CE), Sem 3 Div A (CE), Sem 5 Div A (IT)
 - **8 Realistic Courses**: Computer Networks (`CS501`), DBMS (`CS502`), Operating Systems (`CS503`), Software Engineering (`CS504`), etc.
-- **7 User Accounts**:
-  - Admin (`admin` / `Admin@123`)
-  - 2 Faculty (`faculty01`, `faculty02` / `Faculty@123`)
-  - 4 Students (`230101` through `230104` / `Student@123`)
-- **Evaluations & Feedback**:
-  - Student `230101` (Rahul Patel) has accepted submissions with faculty feedback on Database Certification and Software Engineering Case Study, and an active submission pending review on Computer Networks Presentation.
+- **29 User Accounts**:
+  - **1 System Admin**: `admin` / `Admin@123`
+  - **8 Faculty Accounts** (Password: `Faculty@123`):
+    - `faculty01`: Dr. Rajesh Sharma (`FAC-CE-01`, CE, Lead Coordinator)
+    - `faculty02`: Prof. Ananya Verma (`FAC-CE-02`, CE, Lead Coordinator)
+    - `faculty03`: Prof. Sneha Kulkarni (`FAC-CE-03`, CE, AI & Concurrency)
+    - `faculty04`: Dr. Amit Trivedi (`FAC-CE-04`, CE, Full Stack & Agile)
+    - `faculty05`: Prof. Neha Gupta (`FAC-CE-05`, CE, Network Security)
+    - `faculty06`: Dr. Manoj Pandya (`FAC-IT-01`, IT, Mobile App Engineering)
+    - `faculty07`: Prof. Ritu Deshmukh (`FAC-IT-02`, IT, IoT Systems)
+    - `faculty08`: Dr. Suresh Rathod (`FAC-ME-01`, ME, Robotics & CAD)
+  - **20 Student Accounts** (Password: `Student@123`):
+    - **CE Sem 5 Div A**: `230101` (Rahul Patel), `230102` (Aarav Shah), `230103` (Priya Mehta), `230105` (Rohan Desai), `230106` (Ananya Iyer), `230107` (Devansh Dave), `230108` (Diya Trivedi)
+    - **CE Sem 5 Div B**: `230104` (Vikram Joshi), `230109` (Kavya Nair), `230110` (Harshil Vora), `230111` (Meera Bhatia), `230112` (Yash Rathore), `230113` (Aryan Kothari), `230114` (Pooja Solanki)
+    - **CE Sem 3 Div A**: `240101` (Aditya Rao), `240102` (Ishita Sen), `240103` (Tanmay Kulkarni)
+    - **IT Sem 5 Div A**: `230201` (Karan Singhania), `230202` (Snehal Patil), `230203` (Pranav Menon)
+- **Collaborative Project Groups**:
+  - `Alpha`: Rahul Patel, Aarav Shah, Priya Mehta (Project: *Decentralized Campus Identity*)
+  - `Beta`: Vikram Joshi (Project: *High-Performance Cache Engine*)
+  - `CyberPackets`: Rohan Desai, Ananya Iyer, Devansh Dave (Project: *SDN Flow Routing*)
+  - `ByteForge`: Kavya Nair, Harshil Vora, Meera Bhatia (Project: *Zero-Trust Mesh Network*)
+  - `DataWeavers`: Diya Trivedi, Yash Rathore, Aryan Kothari (Project: *Distributed Key-Value Store*)
+- **Evaluations & Feedback State Coverage**:
+  - `ACCEPTED`: Rahul Patel (Database Cert, SE Case Study), Aarav Shah (Database Cert), Ananya Iyer (Networks PPT)
+  - `REJECTED`: Priya Mehta (SE Case Study - missing error handling), Kavya Nair (Networks Packet Capture - truncated file)
+  - `SUBMITTED` (Pending Faculty Review): Rahul Patel (Networks PPT), Aarav Shah (Networks PPT), Priya Mehta (Networks PPT), Rohan Desai (Networks Wireshark), Ananya Iyer (SE Case Study), Kavya Nair (ER Diagram Report), Harshil Vora (Database Cert), Diya Trivedi (Networks Wireshark)
