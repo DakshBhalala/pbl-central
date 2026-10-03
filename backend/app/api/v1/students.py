@@ -4,9 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_student, require_role
 from app.models.user import Student, UserRole
-from app.models.pbl import PblActivity, Component, PblStatus, TopicMode
+from app.models.pbl import PblActivity, Component, PblStatus
 from app.models.group import Group, GroupMember, Project
-from app.models.topic import Topic, TopicStatus
 from app.models.progress import StudentComponentProgress, ProgressState, SubmissionState
 from app.models.notification import Notification
 from app.schemas.user import StudentOut, StudentProfileUpdate
@@ -18,7 +17,6 @@ from app.schemas.progress import (
 )
 from app.schemas.pbl import ComponentOut, PblActivityOut, PblActivityDetailOut, FacultySimpleOut
 from app.schemas.group import GroupCreate, GroupOut, GroupMemberOut, ProjectOut
-from app.schemas.topic import TopicOut, TopicPropose
 from app.schemas.notification import NotificationOut
 from app.services.assignment_service import (
     get_assigned_components_for_student,
@@ -140,7 +138,6 @@ def get_student_pbl_activities(
             start_date=p.start_date,
             end_date=p.end_date,
             status=p.status,
-            topic_mode=p.topic_mode,
             allow_student_groups=p.allow_student_groups,
             require_group_approval=p.require_group_approval,
             subject_name=p.subject.name if p.subject else None,
@@ -196,7 +193,6 @@ def get_student_pbl_detail(
         start_date=pbl.start_date,
         end_date=pbl.end_date,
         status=pbl.status,
-        topic_mode=pbl.topic_mode,
         allow_student_groups=pbl.allow_student_groups,
         require_group_approval=pbl.require_group_approval,
         subject_name=pbl.subject.name if pbl.subject else None,
@@ -342,50 +338,6 @@ def get_student_groups(
     return result
 
 
-@router.post("/me/topics/propose", response_model=TopicOut)
-def propose_topic(
-    data: TopicPropose,
-    student: Student = Depends(get_current_student),
-    db: Session = Depends(get_db)
-):
-    pbl = db.query(PblActivity).filter(PblActivity.id == data.pbl_activity_id).first()
-    if not pbl:
-        raise HTTPException(status_code=404, detail="PBL activity not found")
-
-    # Spec: Student-proposed topic starts as APPROVED unless faculty rejects it!
-    topic = Topic(
-        pbl_activity_id=data.pbl_activity_id,
-        title=data.title,
-        description=data.description,
-        mode=TopicMode.STUDENT_PROPOSED,
-        status=TopicStatus.APPROVED,
-        proposed_by_student_id=student.id,
-        assigned_to_group_id=data.group_id,
-        assigned_to_student_id=student.id if not data.group_id else None
-    )
-    db.add(topic)
-    db.flush()
-
-    db.commit()
-    db.refresh(topic)
-
-    return TopicOut(
-        id=topic.id,
-        pbl_activity_id=topic.pbl_activity_id,
-        pbl_title=pbl.title,
-        title=topic.title,
-        description=topic.description,
-        mode=topic.mode,
-        status=topic.status,
-        proposed_by_student_id=student.id,
-        proposed_by_student_name=student.name,
-        assigned_to_group_id=topic.assigned_to_group_id,
-        assigned_to_student_id=topic.assigned_to_student_id,
-        created_at=topic.created_at,
-        history=[]
-    )
-
-
 @router.post("/me/pbl/{pbl_id}/groups", response_model=GroupOut)
 def create_student_group(
     pbl_id: int,
@@ -486,98 +438,6 @@ def join_student_group(
             for m in group.members
         ],
         created_at=group.created_at
-    )
-
-
-@router.get("/me/pbl/{pbl_id}/available-topics", response_model=List[TopicOut])
-def get_available_topics_for_pbl(
-    pbl_id: int,
-    student: Student = Depends(get_current_student),
-    db: Session = Depends(get_db)
-):
-    pbl = db.query(PblActivity).filter(PblActivity.id == pbl_id).first()
-    if not pbl or pbl.department_id != student.department_id or pbl.semester_id != student.semester_id:
-        raise HTTPException(status_code=404, detail="PBL activity not found or access denied")
-
-    topics = db.query(Topic).filter(
-        Topic.pbl_activity_id == pbl_id,
-        Topic.mode == TopicMode.STUDENT_LIST
-    ).all()
-
-    results = []
-    for t in topics:
-        results.append(TopicOut(
-            id=t.id,
-            pbl_activity_id=t.pbl_activity_id,
-            pbl_title=pbl.title,
-            title=t.title,
-            description=t.description,
-            mode=t.mode,
-            status=t.status,
-            assigned_to_group_id=t.assigned_to_group_id,
-            assigned_to_group_name=t.assigned_to_group.group_name if t.assigned_to_group else None,
-            assigned_to_student_id=t.assigned_to_student_id,
-            created_at=t.created_at
-        ))
-    return results
-
-
-@router.post("/me/pbl/{pbl_id}/topics/{topic_id}/select", response_model=TopicOut)
-def select_topic_from_pool(
-    pbl_id: int,
-    topic_id: int,
-    payload: Dict[str, Any] = Body(default={}),
-    student: Student = Depends(get_current_student),
-    db: Session = Depends(get_db)
-):
-    pbl = db.query(PblActivity).filter(PblActivity.id == pbl_id).first()
-    if not pbl or pbl.department_id != student.department_id or pbl.semester_id != student.semester_id:
-        raise HTTPException(status_code=404, detail="PBL activity not found or access denied")
-
-    topic = db.query(Topic).filter(
-        Topic.id == topic_id,
-        Topic.pbl_activity_id == pbl_id
-    ).first()
-    if not topic:
-        raise HTTPException(status_code=404, detail="Topic not found in this PBL activity")
-
-    group_id = payload.get("group_id")
-    if group_id:
-        student_group_ids = get_student_group_ids(db, student.id, pbl.id)
-        if group_id not in student_group_ids:
-            raise HTTPException(status_code=403, detail="You are not a member of the selected group")
-
-    # Spec: Do NOT prevent duplicate topics at system level. Duplicates are allowed.
-    assigned_topic = Topic(
-        pbl_activity_id=pbl.id,
-        title=topic.title,
-        description=topic.description,
-        mode=TopicMode.STUDENT_LIST,
-        status=TopicStatus.APPROVED,
-        assigned_to_group_id=group_id,
-        assigned_to_student_id=student.id if not group_id else None,
-        proposed_by_student_id=student.id
-    )
-    db.add(assigned_topic)
-    db.flush()
-
-    db.commit()
-    db.refresh(assigned_topic)
-
-    return TopicOut(
-        id=assigned_topic.id,
-        pbl_activity_id=pbl.id,
-        pbl_title=pbl.title,
-        title=assigned_topic.title,
-        description=assigned_topic.description,
-        mode=assigned_topic.mode,
-        status=assigned_topic.status,
-        proposed_by_student_id=student.id,
-        proposed_by_student_name=student.name,
-        assigned_to_group_id=assigned_topic.assigned_to_group_id,
-        assigned_to_student_id=assigned_topic.assigned_to_student_id,
-        created_at=assigned_topic.created_at,
-        history=[]
     )
 
 

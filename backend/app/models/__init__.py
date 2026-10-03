@@ -7,10 +7,8 @@ from app.models.pbl import (
     ComponentType,
     Component,
     PblStatus,
-    TopicMode,
 )
 from app.models.group import Group, GroupMember, Project
-from app.models.topic import Topic, TopicStatus
 from app.models.progress import (
     StudentComponentProgress,
     ProgressState,
@@ -34,12 +32,9 @@ __all__ = [
     "ComponentType",
     "Component",
     "PblStatus",
-    "TopicMode",
     "Group",
     "GroupMember",
     "Project",
-    "Topic",
-    "TopicStatus",
     "StudentComponentProgress",
     "ProgressState",
     "SubmissionState",

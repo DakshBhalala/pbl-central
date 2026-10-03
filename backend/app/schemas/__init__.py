@@ -54,14 +54,6 @@ from app.schemas.group import (
     ProjectUpdate,
     ProjectOut,
 )
-from app.schemas.topic import (
-    TopicHistoryOut,
-    TopicBase,
-    TopicPropose,
-    TopicCreate,
-    TopicRejectRequest,
-    TopicOut,
-)
 from app.schemas.progress import (
     StudentProgressUpdate,
     StudentSubmissionToggle,

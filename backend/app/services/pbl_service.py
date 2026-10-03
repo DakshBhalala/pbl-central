@@ -41,7 +41,6 @@ def duplicate_pbl_activity(
         start_date=target_year.start_date,
         end_date=target_year.end_date,
         status=PblStatus.ACTIVE,
-        topic_mode=source_pbl.topic_mode,
         allow_student_groups=source_pbl.allow_student_groups,
         require_group_approval=source_pbl.require_group_approval,
         created_by=current_user_id,

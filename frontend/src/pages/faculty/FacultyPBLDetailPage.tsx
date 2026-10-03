@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { facultyApi, SubmissionRow } from '../../api/faculty';
 import { academicApi } from '../../api/academic';
-import { PblActivityDetail, Component, ComponentType, Group, Topic } from '../../types';
+import { PblActivityDetail, Component, ComponentType, Group } from '../../types';
 import { LoadingState } from '../../components/common/LoadingState';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
@@ -34,7 +34,6 @@ export const FacultyPBLDetailPage: React.FC = () => {
   const [pbl, setPbl] = useState<PblActivityDetail | null>(null);
   const [submissions, setSubmissions] = useState<SubmissionRow[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [togglingStatus, setTogglingStatus] = useState(false);
 
@@ -58,17 +57,15 @@ export const FacultyPBLDetailPage: React.FC = () => {
     if (!id) return;
     try {
       setLoading(true);
-      const [detailRes, subsRes, groupsRes, topicsRes, ctsRes] = await Promise.all([
+      const [detailRes, subsRes, groupsRes, ctsRes] = await Promise.all([
         facultyApi.getPblDetail(Number(id)),
         facultyApi.getSubmissions(Number(id)),
         facultyApi.getGroups(Number(id)),
-        facultyApi.getTopics(Number(id)),
         academicApi.getComponentTypes(),
       ]);
       setPbl(detailRes);
       setSubmissions(subsRes);
       setGroups(groupsRes);
-      setTopics(topicsRes);
       setComponentTypes(ctsRes);
 
       setEditPblTitle(detailRes.title);

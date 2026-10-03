@@ -6,7 +6,7 @@ This document provides a comprehensive technical overview of the **PBL Central**
 
 ## 1. Architecture & Technology Stack
 
-- **Total Tables**: **18 Tables** (Streamlined and simplified from 23, eliminating over-engineered audit/junction tables).
+- **Total Tables**: **17 Tables** (Streamlined and simplified from 23 down to 17, eliminating redundant junction, audit, and unused feature tables).
 - **ORM**: [SQLAlchemy 2.0](https://www.sqlalchemy.org/) (declarative mapping with type-safe schema definitions).
 - **Primary Database Engine**: SQLite (embedded, local development & demo) / PostgreSQL (production & containerized deployments).
 - **Database Migrations / Schema Initialization**: Declarative table creation via `init_db()` and programmatic seeding via `app.seed.seed_database()`.
@@ -15,7 +15,7 @@ This document provides a comprehensive technical overview of the **PBL Central**
 
 ---
 
-## 2. Streamlined Architecture Summary (18 Tables)
+## 2. Streamlined Architecture Summary (17 Tables)
 
 | Domain | Table Name | Purpose |
 |---|---|---|
@@ -34,7 +34,6 @@ This document provides a comprehensive technical overview of the **PBL Central**
 | **Teamwork & Projects** | `groups` | Student collaborative teams within a PBL activity |
 | | `group_members` | Group membership junction table |
 | | `projects` | Team project title, topic, external repository URL, and faculty mentor |
-| **Topics** | `topics` | Topic pool and student-proposed topics with approval status |
 | **Progress & Evaluation** | `student_component_progress` | Student progress, submission lifecycle, Accept/Reject decision & feedback |
 | **Communication** | `notifications` | In-app alerts, deadline reminders, and faculty evaluation updates |
 
@@ -70,8 +69,6 @@ erDiagram
     students ||--o{ group_members : "joins"
     groups ||--o| projects : "builds"
 
-    pbl_activities ||--o{ topics : "topic pool"
-
     students ||--o{ student_component_progress : "progress on"
     components ||--o{ student_component_progress : "tracked by"
     faculty ||--o{ student_component_progress : "evaluates"
@@ -87,8 +84,8 @@ erDiagram
    Faculty members have a direct foreign key `faculty.department_id` to their primary department, avoiding an extra junction table.
 3. **`component_assignments` removed**:
    Milestones/components created under a PBL activity automatically apply to all students enrolled in that activity's department and semester.
-4. **`topic_histories` removed**:
-   Topic approval status (`APPROVED`, `REJECTED`, `PENDING`) and rejection reasons are tracked directly on `topics`.
+4. **`topic_histories` & `topics` removed**:
+   Unused topic pool and proposal tables removed to streamline workflow directly to PBL project milestones, team collaboration, and deliverables.
 5. **`faculty_reviews` merged**:
    Numeric marks (out of 25) have been completely removed. Evaluations are now clean **Accept / Reject** decisions with faculty remarks stored directly on `student_component_progress`:
    - `submission_state`: `NOT_SUBMITTED` -> `SUBMITTED` -> `ACCEPTED` or `REJECTED`
@@ -278,20 +275,6 @@ erDiagram
 | `guide_faculty_id` | `INTEGER` | FK(`faculty.id`), Nullable | Faculty mentor |
 | `status` | `VARCHAR(50)` | Default `"In Progress"` | Working status |
 | `external_url` | `VARCHAR(500)` | Nullable | GitHub/GitLab repository URL |
-
-#### `topics`
-| Column | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | `INTEGER` | PK, Auto | Topic ID |
-| `pbl_activity_id` | `INTEGER` | FK(`pbl_activities.id`), Not Null | Parent PBL activity |
-| `title` | `VARCHAR(255)` | Not Null | Topic proposal title |
-| `description` | `TEXT` | Nullable | Proposal details |
-| `mode` | `ENUM` | Not Null | `FACULTY_ASSIGNED`, `STUDENT_LIST`, `STUDENT_PROPOSED`, `NO_TOPIC` |
-| `status` | `ENUM` | Default `APPROVED` | `APPROVED`, `REJECTED`, `PENDING` |
-| `proposed_by_student_id` | `INTEGER` | FK(`students.id`), Nullable | Student author (if proposed) |
-| `assigned_to_group_id` | `INTEGER` | FK(`groups.id`), Nullable | Assigned team |
-| `assigned_to_student_id` | `INTEGER` | FK(`students.id`), Nullable | Assigned individual |
-| `rejection_reason` | `TEXT` | Nullable | Feedback reason if rejected |
 
 ---
 

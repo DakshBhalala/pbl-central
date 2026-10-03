@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional, List
 from pydantic import BaseModel, HttpUrl, ConfigDict
-from app.models.pbl import PblStatus, TopicMode
+from app.models.pbl import PblStatus
 
 
 class ComponentTypeBase(BaseModel):
@@ -84,7 +84,6 @@ class PblActivityBase(BaseModel):
     start_date: date
     end_date: date
     status: PblStatus = PblStatus.ACTIVE
-    topic_mode: TopicMode = TopicMode.STUDENT_PROPOSED
     allow_student_groups: bool = True
     require_group_approval: bool = False
 
@@ -98,7 +97,6 @@ class PblActivityUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[PblStatus] = None
-    topic_mode: Optional[TopicMode] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     allow_student_groups: Optional[bool] = None

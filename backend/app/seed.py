@@ -10,10 +10,8 @@ from app.models.pbl import (
     PblFaculty,
     Component,
     PblStatus,
-    TopicMode,
 )
 from app.models.group import Group, GroupMember, Project
-from app.models.topic import Topic, TopicStatus
 from app.models.progress import (
     StudentComponentProgress,
     ProgressState,
@@ -26,7 +24,7 @@ def seed_database(db: Session = None, reset: bool = False):
     should_close = False
     if reset:
         print("Resetting database: recreating tables across schema...")
-        from app.models import base, user, academic, pbl, group, topic, progress, notification  # noqa
+        from app.models import base, user, academic, pbl, group, progress, notification  # noqa
         if db:
             db.close()
         Base.metadata.drop_all(bind=engine)
@@ -167,7 +165,6 @@ def seed_database(db: Session = None, reset: bool = False):
         start_date=date(2026, 7, 15),
         end_date=date(2026, 11, 30),
         status=PblStatus.ACTIVE,
-        topic_mode=TopicMode.STUDENT_PROPOSED,
         created_by=u_fac1.id
     )
     # PBL 2: DBMS
@@ -181,7 +178,6 @@ def seed_database(db: Session = None, reset: bool = False):
         start_date=date(2026, 7, 15),
         end_date=date(2026, 11, 30),
         status=PblStatus.ACTIVE,
-        topic_mode=TopicMode.STUDENT_LIST,
         created_by=u_fac2.id
     )
     # PBL 3: Operating Systems
@@ -195,7 +191,6 @@ def seed_database(db: Session = None, reset: bool = False):
         start_date=date(2026, 8, 1),
         end_date=date(2026, 11, 20),
         status=PblStatus.ACTIVE,
-        topic_mode=TopicMode.FACULTY_ASSIGNED,
         created_by=u_fac1.id
     )
     # PBL 4: Software Engineering
@@ -209,7 +204,6 @@ def seed_database(db: Session = None, reset: bool = False):
         start_date=date(2026, 8, 1),
         end_date=date(2026, 11, 25),
         status=PblStatus.ACTIVE,
-        topic_mode=TopicMode.STUDENT_PROPOSED,
         created_by=u_fac2.id
     )
     # PBL 5: AI
@@ -223,7 +217,6 @@ def seed_database(db: Session = None, reset: bool = False):
         start_date=date(2026, 8, 10),
         end_date=date(2026, 12, 5),
         status=PblStatus.ACTIVE,
-        topic_mode=TopicMode.NO_TOPIC,
         created_by=u_fac1.id
     )
     # PBL 6: Web App Development (DRAFT - Hidden mode demonstration)
@@ -237,7 +230,6 @@ def seed_database(db: Session = None, reset: bool = False):
         start_date=date(2026, 8, 15),
         end_date=date(2026, 12, 10),
         status=PblStatus.DRAFT,  # Hidden from students until faculty publishes!
-        topic_mode=TopicMode.STUDENT_PROPOSED,
         created_by=u_fac1.id
     )
 
@@ -477,37 +469,6 @@ def seed_database(db: Session = None, reset: bool = False):
         GroupMember(group_id=grp_db.id, student_id=s_priya.id)
     ])
     db.flush()
-
-    # 12. Topics
-    # Student Proposed topic (approved per platform rules)
-    t_proposed = Topic(
-        pbl_activity_id=pbl_cn.id,
-        title="Adaptive Congestion Control in Campus WiFi 6 Subnets",
-        description="Proposing deep reinforcement learning for dynamic contention window tuning in dense auditoriums.",
-        mode=TopicMode.STUDENT_PROPOSED,
-        status=TopicStatus.APPROVED,
-        proposed_by_student_id=s_rahul.id,
-        assigned_to_group_id=grp_cn.id
-    )
-    db.add(t_proposed)
-
-    # Topic Pool for DBMS
-    t_pool1 = Topic(
-        pbl_activity_id=pbl_db.id,
-        title="Real-Time Hospital Bed Allocation & Patient Triage DB",
-        description="Multi-tenant relational database with row-level locking for ICU emergency ward reservations.",
-        mode=TopicMode.STUDENT_LIST,
-        status=TopicStatus.APPROVED,
-        assigned_to_group_id=grp_db.id
-    )
-    t_pool2 = Topic(
-        pbl_activity_id=pbl_db.id,
-        title="High-Frequency Stock Trade Ledger with Audit Trails",
-        description="Append-only transaction log design using partitioned PostgreSQL tables.",
-        mode=TopicMode.STUDENT_LIST,
-        status=TopicStatus.APPROVED
-    )
-    db.add_all([t_pool1, t_pool2])
 
     # 13. Student Progress & Faculty Evaluations for Rahul Patel (230101)
     # Certification completed & ACCEPTED with faculty feedback

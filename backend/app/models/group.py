@@ -20,7 +20,6 @@ class Group(Base, TimestampMixin):
     pbl_activity = relationship("PblActivity", back_populates="groups")
     members = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan")
     project = relationship("Project", back_populates="group", uselist=False, cascade="all, delete-orphan")
-    topics = relationship("Topic", back_populates="assigned_to_group")
 
 
 class GroupMember(Base):

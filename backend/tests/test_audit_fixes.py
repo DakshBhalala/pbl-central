@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, timezone
 from app.models.pbl import (
     PblActivity,
     Component,
-    TopicMode,
 )
 from app.models.progress import SubmissionState, ProgressState
 from app.models.user import Student, User, UserRole
@@ -24,41 +23,6 @@ def test_student_components_cohort_resolution(client, student_token, db):
     assert len(data["components"]) >= 1
     comp1 = next((c for c in data["components"] if c["id"] == 1), None)
     assert comp1 is not None
-
-
-def test_student_topic_pool_selection(client, student_token, faculty_token, db):
-    """
-    Requirement 6: Topic pool created by faculty in STUDENT_LIST mode,
-    and student selects from the pool.
-    """
-    fac_headers = {"Authorization": f"Bearer {faculty_token}"}
-    stud_headers = {"Authorization": f"Bearer {student_token}"}
-
-    # Ensure PBL 1 is in STUDENT_LIST mode
-    pbl = db.query(PblActivity).filter(PblActivity.id == 1).first()
-    assert pbl is not None
-    pbl.topic_mode = TopicMode.STUDENT_LIST
-    db.commit()
-
-    # Faculty adds topic to pool
-    topic_payload = {
-        "title": "Zero-Trust Cloud Architecture",
-        "description": "Implementation of micro-segmentation in hybrid clouds."
-    }
-    create_res = client.post("/api/v1/faculty/pbl/1/topics", headers=fac_headers, json=topic_payload)
-    assert create_res.status_code == 200
-    topic_id = create_res.json()["id"]
-
-    # Student views available topics for PBL 1
-    avail_res = client.get("/api/v1/students/me/pbl/1/available-topics", headers=stud_headers)
-    assert avail_res.status_code == 200
-    avail_topics = avail_res.json()
-    assert any(t["id"] == topic_id for t in avail_topics)
-
-    # Student selects topic from pool
-    select_res = client.post(f"/api/v1/students/me/pbl/1/topics/{topic_id}/select", headers=stud_headers)
-    assert select_res.status_code == 200
-    assert select_res.json()["title"] == "Zero-Trust Cloud Architecture"
 
 
 def test_resubmission_prevention_after_rejection(client, student_token, faculty_token):
@@ -205,7 +169,6 @@ def test_pbl_duplication_cleanliness(client, faculty_token):
     assert detail_res.status_code == 200
     detail = detail_res.json()
     assert len(detail.get("groups", [])) == 0
-    assert len(detail.get("topics", [])) == 0
 
 
 def test_submission_reset_prevention(client, student_token):

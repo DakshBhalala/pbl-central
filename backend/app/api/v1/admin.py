@@ -533,7 +533,6 @@ def browse_historical_pbls(
             start_date=p.start_date,
             end_date=p.end_date,
             status=p.status,
-            topic_mode=p.topic_mode,
             allow_student_groups=p.allow_student_groups,
             require_group_approval=p.require_group_approval,
             subject_name=p.subject.name if p.subject else None,

@@ -10,10 +10,8 @@ from app.models.pbl import (
     PblFaculty,
     Component,
     PblStatus,
-    TopicMode,
 )
 from app.models.group import Group, GroupMember, Project
-from app.models.topic import Topic, TopicStatus
 from app.models.progress import StudentComponentProgress, SubmissionState, ProgressState
 from app.schemas.pbl import (
     PblActivityCreate,
@@ -27,7 +25,6 @@ from app.schemas.pbl import (
     FacultySimpleOut,
 )
 from app.schemas.group import GroupCreate, GroupOut, GroupMemberOut, ProjectOut
-from app.schemas.topic import TopicCreate, TopicOut, TopicRejectRequest
 from app.schemas.progress import FacultyReviewCreate, FacultyReviewOut
 from app.schemas.user import StudentOut, StudentCreate, FacultyOut, FacultyProfileUpdate
 from app.services.pbl_service import duplicate_pbl_activity
@@ -75,16 +72,7 @@ def get_faculty_dashboard(
         .count() if pbl_ids else 0
     )
 
-    # Topics pending action (student proposed)
-    pending_topics = (
-        db.query(Topic)
-        .filter(
-            Topic.pbl_activity_id.in_(pbl_ids),
-            Topic.mode == TopicMode.STUDENT_PROPOSED,
-            Topic.status == TopicStatus.APPROVED  # currently auto-approved, available for review/rejection
-        )
-        .count() if pbl_ids else 0
-    )
+    pending_topics = 0
 
     # Overdue components count across student assignments
     now = datetime.now(timezone.utc)
@@ -198,7 +186,6 @@ def list_faculty_pbl_activities(
             start_date=p.start_date,
             end_date=p.end_date,
             status=p.status,
-            topic_mode=p.topic_mode,
             allow_student_groups=p.allow_student_groups,
             require_group_approval=p.require_group_approval,
             subject_name=p.subject.name if p.subject else None,
@@ -237,7 +224,6 @@ def create_pbl_activity(
         start_date=data.start_date,
         end_date=data.end_date,
         status=data.status,
-        topic_mode=data.topic_mode,
         allow_student_groups=data.allow_student_groups,
         require_group_approval=data.require_group_approval,
         created_by=current_user.id
@@ -313,7 +299,6 @@ def create_pbl_activity(
         start_date=pbl.start_date,
         end_date=pbl.end_date,
         status=pbl.status,
-        topic_mode=pbl.topic_mode,
         allow_student_groups=pbl.allow_student_groups,
         require_group_approval=pbl.require_group_approval,
         subject_name=pbl.subject.name if pbl.subject else None,
@@ -386,7 +371,6 @@ def get_pbl_activity_detail(
         start_date=pbl.start_date,
         end_date=pbl.end_date,
         status=pbl.status,
-        topic_mode=pbl.topic_mode,
         allow_student_groups=pbl.allow_student_groups,
         require_group_approval=pbl.require_group_approval,
         subject_name=pbl.subject.name if pbl.subject else None,
@@ -797,204 +781,6 @@ def create_group(
         group_code=grp.group_code,
         members=members_out,
         created_at=grp.created_at
-    )
-
-
-@router.get("/pbl/{pbl_id}/topics", response_model=List[TopicOut])
-def get_pbl_topics(
-    pbl_id: int,
-    db: Session = Depends(get_db)
-):
-    topics = db.query(Topic).filter(Topic.pbl_activity_id == pbl_id).all()
-    results = []
-    for t in topics:
-        results.append(TopicOut(
-            id=t.id,
-            pbl_activity_id=t.pbl_activity_id,
-            pbl_title=t.pbl_activity.title if t.pbl_activity else "",
-            title=t.title,
-            description=t.description,
-            mode=t.mode,
-            status=t.status,
-            proposed_by_student_id=t.proposed_by_student_id,
-            proposed_by_student_name=t.proposed_by_student.name if t.proposed_by_student else None,
-            assigned_to_group_id=t.assigned_to_group_id,
-            assigned_to_group_name=t.assigned_to_group.group_name if t.assigned_to_group else None,
-            assigned_to_student_id=t.assigned_to_student_id,
-            rejection_reason=t.rejection_reason,
-            history=[],
-            created_at=t.created_at
-        ))
-    return results
-
-
-@router.patch("/topics/{topic_id}/reject", response_model=TopicOut)
-def reject_topic(
-    topic_id: int,
-    data: TopicRejectRequest,
-    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.ADMIN])),
-    db: Session = Depends(get_db)
-):
-    topic = db.query(Topic).filter(Topic.id == topic_id).first()
-    if not topic:
-        raise HTTPException(status_code=404, detail="Topic not found")
-
-    topic.status = TopicStatus.REJECTED
-    topic.rejection_reason = data.reason
-
-    # Notify student
-    if topic.proposed_by_student:
-        create_notification(
-            db=db,
-            user_id=topic.proposed_by_student.user_id,
-            title=f"Topic Proposal Rejected: {topic.title}",
-            message=f"Reason: {data.reason}",
-            link=f"/student/pbl/{topic.pbl_activity_id}"
-        )
-
-    db.commit()
-    db.refresh(topic)
-
-    return TopicOut(
-        id=topic.id,
-        pbl_activity_id=topic.pbl_activity_id,
-        pbl_title=topic.pbl_activity.title if topic.pbl_activity else "",
-        title=topic.title,
-        description=topic.description,
-        mode=topic.mode,
-        status=topic.status,
-        proposed_by_student_id=topic.proposed_by_student_id,
-        proposed_by_student_name=topic.proposed_by_student.name if topic.proposed_by_student else None,
-        assigned_to_group_id=topic.assigned_to_group_id,
-        assigned_to_group_name=topic.assigned_to_group.group_name if topic.assigned_to_group else None,
-        assigned_to_student_id=topic.assigned_to_student_id,
-        rejection_reason=topic.rejection_reason,
-        history=[],
-        created_at=topic.created_at
-    )
-
-
-@router.patch("/topics/{topic_id}/approve", response_model=TopicOut)
-def approve_topic(
-    topic_id: int,
-    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.ADMIN])),
-    db: Session = Depends(get_db)
-):
-    topic = db.query(Topic).filter(Topic.id == topic_id).first()
-    if not topic:
-        raise HTTPException(status_code=404, detail="Topic not found")
-
-    topic.status = TopicStatus.APPROVED
-    topic.rejection_reason = None
-
-    if topic.proposed_by_student:
-        create_notification(
-            db=db,
-            user_id=topic.proposed_by_student.user_id,
-            title=f"Topic Approved: {topic.title}",
-            message="Your proposed topic has been approved by faculty.",
-            link=f"/student/pbl/{topic.pbl_activity_id}"
-        )
-
-    db.commit()
-    db.refresh(topic)
-
-    return TopicOut(
-        id=topic.id,
-        pbl_activity_id=topic.pbl_activity_id,
-        pbl_title=topic.pbl_activity.title if topic.pbl_activity else "",
-        title=topic.title,
-        description=topic.description,
-        mode=topic.mode,
-        status=topic.status,
-        proposed_by_student_id=topic.proposed_by_student_id,
-        proposed_by_student_name=topic.proposed_by_student.name if topic.proposed_by_student else None,
-        assigned_to_group_id=topic.assigned_to_group_id,
-        assigned_to_group_name=topic.assigned_to_group.group_name if topic.assigned_to_group else None,
-        assigned_to_student_id=topic.assigned_to_student_id,
-        rejection_reason=topic.rejection_reason,
-        history=[],
-        created_at=topic.created_at
-    )
-
-
-@router.post("/pbl/{pbl_id}/topics", response_model=TopicOut)
-def create_pbl_topic(
-    pbl_id: int,
-    data: TopicCreate,
-    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.ADMIN])),
-    db: Session = Depends(get_db)
-):
-    pbl = db.query(PblActivity).filter(PblActivity.id == pbl_id).first()
-    if not pbl:
-        raise HTTPException(status_code=404, detail="PBL activity not found")
-
-    topic = Topic(
-        pbl_activity_id=pbl.id,
-        title=data.title,
-        description=data.description,
-        mode=data.mode or pbl.topic_mode,
-        status=TopicStatus.APPROVED,
-        assigned_to_group_id=data.assigned_to_group_id,
-        assigned_to_student_id=data.assigned_to_student_id
-    )
-    db.add(topic)
-    db.commit()
-    db.refresh(topic)
-
-    return TopicOut(
-        id=topic.id,
-        pbl_activity_id=topic.pbl_activity_id,
-        pbl_title=pbl.title,
-        title=topic.title,
-        description=topic.description,
-        mode=topic.mode,
-        status=topic.status,
-        assigned_to_group_id=topic.assigned_to_group_id,
-        assigned_to_group_name=topic.assigned_to_group.group_name if topic.assigned_to_group else None,
-        assigned_to_student_id=topic.assigned_to_student_id,
-        history=[],
-        created_at=topic.created_at
-    )
-
-
-@router.patch("/topics/{topic_id}/assign", response_model=TopicOut)
-def assign_topic(
-    topic_id: int,
-    payload: Dict[str, Any] = Body(...),
-    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.ADMIN])),
-    db: Session = Depends(get_db)
-):
-    topic = db.query(Topic).filter(Topic.id == topic_id).first()
-    if not topic:
-        raise HTTPException(status_code=404, detail="Topic not found")
-
-    group_id = payload.get("group_id")
-    student_id = payload.get("student_id")
-    if group_id is not None:
-        topic.assigned_to_group_id = group_id
-    if student_id is not None:
-        topic.assigned_to_student_id = student_id
-
-    db.commit()
-    db.refresh(topic)
-
-    return TopicOut(
-        id=topic.id,
-        pbl_activity_id=topic.pbl_activity_id,
-        pbl_title=topic.pbl_activity.title if topic.pbl_activity else "",
-        title=topic.title,
-        description=topic.description,
-        mode=topic.mode,
-        status=topic.status,
-        proposed_by_student_id=topic.proposed_by_student_id,
-        proposed_by_student_name=topic.proposed_by_student.name if topic.proposed_by_student else None,
-        assigned_to_group_id=topic.assigned_to_group_id,
-        assigned_to_group_name=topic.assigned_to_group.group_name if topic.assigned_to_group else None,
-        assigned_to_student_id=topic.assigned_to_student_id,
-        rejection_reason=topic.rejection_reason,
-        history=[],
-        created_at=topic.created_at
     )
 
 

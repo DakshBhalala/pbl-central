@@ -33,5 +33,5 @@ def get_db():
 
 def init_db():
     # Import all models so tables are registered with Base.metadata
-    from app.models import base, user, academic, pbl, group, topic, progress, notification  # noqa
+    from app.models import base, user, academic, pbl, group, progress, notification  # noqa
     Base.metadata.create_all(bind=engine)

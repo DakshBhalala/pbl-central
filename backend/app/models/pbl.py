@@ -13,13 +13,6 @@ class PblStatus(str, enum.Enum):
     ARCHIVED = "ARCHIVED"
 
 
-class TopicMode(str, enum.Enum):
-    FACULTY_ASSIGNED = "FACULTY_ASSIGNED"
-    STUDENT_LIST = "STUDENT_LIST"
-    STUDENT_PROPOSED = "STUDENT_PROPOSED"
-    NO_TOPIC = "NO_TOPIC"
-
-
 class PblActivity(Base, TimestampMixin):
     __tablename__ = "pbl_activities"
 
@@ -35,7 +28,6 @@ class PblActivity(Base, TimestampMixin):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     status = Column(Enum(PblStatus), default=PblStatus.ACTIVE, nullable=False)
-    topic_mode = Column(Enum(TopicMode), default=TopicMode.STUDENT_PROPOSED, nullable=False)
 
     allow_student_groups = Column(Boolean, default=True, nullable=False)
     require_group_approval = Column(Boolean, default=False, nullable=False)
@@ -51,7 +43,6 @@ class PblActivity(Base, TimestampMixin):
     faculty_members = relationship("PblFaculty", back_populates="pbl_activity", cascade="all, delete-orphan")
     components = relationship("Component", back_populates="pbl_activity", cascade="all, delete-orphan")
     groups = relationship("Group", back_populates="pbl_activity", cascade="all, delete-orphan")
-    topics = relationship("Topic", back_populates="pbl_activity", cascade="all, delete-orphan")
 
 
 class PblFaculty(Base):

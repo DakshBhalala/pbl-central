@@ -25,7 +25,6 @@ def test_new_pbl_activity_notifies_students(client, db, faculty_token, student_t
         "start_date": str(today),
         "end_date": str(today + timedelta(days=90)),
         "status": "ACTIVE",
-        "topic_mode": "STUDENT_PROPOSED",
         "allow_student_groups": True,
         "require_group_approval": False,
         "faculty_ids": [1]
@@ -139,7 +138,6 @@ def test_draft_hidden_pbl_and_publish_workflow(client, db, faculty_token, studen
         "start_date": str(today),
         "end_date": str(today + timedelta(days=60)),
         "status": "DRAFT",
-        "topic_mode": "NO_TOPIC",
         "allow_student_groups": True,
         "require_group_approval": False,
         "faculty_ids": [1]
