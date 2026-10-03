@@ -3,22 +3,19 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, init_db, engine, Base
 from app.core.security import get_password_hash
 from app.models.user import User, Student, Faculty, UserRole
-from app.models.academic import Department, Program, AcademicYear, Semester, Division, Subject
+from app.models.academic import Department, AcademicYear, Semester, Division, Subject
 from app.models.pbl import (
     ComponentType,
     PblActivity,
     PblFaculty,
     Component,
-    ComponentAssignment,
     PblStatus,
     TopicMode,
-    AssignmentScope,
 )
 from app.models.group import Group, GroupMember, Project
-from app.models.topic import Topic, TopicHistory, TopicStatus
+from app.models.topic import Topic, TopicStatus
 from app.models.progress import (
     StudentComponentProgress,
-    FacultyReview,
     ProgressState,
     SubmissionState,
 )
@@ -28,19 +25,12 @@ from app.models.notification import Notification
 def seed_database(db: Session = None, reset: bool = False):
     should_close = False
     if reset:
-        print("Resetting database: clearing all existing records across tables...")
-        # Import all models to ensure metadata has complete table registrations
+        print("Resetting database: recreating tables across schema...")
         from app.models import base, user, academic, pbl, group, topic, progress, notification  # noqa
-        init_db()
         if db:
             db.close()
-        with engine.connect() as conn:
-            for table in reversed(Base.metadata.sorted_tables):
-                try:
-                    conn.execute(table.delete())
-                except Exception as e:
-                    print(f"Note on clearing {table.name}: {e}")
-            conn.commit()
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
         db = SessionLocal()
         should_close = True
     else:
@@ -68,20 +58,15 @@ def seed_database(db: Session = None, reset: bool = False):
     db.add_all([dept_ce, dept_it, dept_me, dept_cl, dept_ec])
     db.flush()
 
-    # 2. Programs
-    prog_btech = Program(name="Bachelor of Technology in Computer Engineering", code="BTECH-CE", department_id=dept_ce.id)
-    db.add(prog_btech)
-    db.flush()
-
-    # 3. Academic Years
+    # 2. Academic Years
     ay_current = AcademicYear(name="2026–27", start_date=date(2026, 7, 1), end_date=date(2027, 6, 30), is_current=True)
     db.add(ay_current)
     db.flush()
 
-    # 4. Semesters
-    sem_3 = Semester(name="Semester 3", number=3, academic_year_id=ay_current.id, department_id=dept_ce.id, program_id=prog_btech.id)
-    sem_5 = Semester(name="Semester 5", number=5, academic_year_id=ay_current.id, department_id=dept_ce.id, program_id=prog_btech.id)
-    sem_7 = Semester(name="Semester 7", number=7, academic_year_id=ay_current.id, department_id=dept_ce.id, program_id=prog_btech.id)
+    # 3. Semesters
+    sem_3 = Semester(name="Semester 3", number=3, academic_year_id=ay_current.id, department_id=dept_ce.id)
+    sem_5 = Semester(name="Semester 5", number=5, academic_year_id=ay_current.id, department_id=dept_ce.id)
+    sem_7 = Semester(name="Semester 7", number=7, academic_year_id=ay_current.id, department_id=dept_ce.id)
     db.add_all([sem_3, sem_5, sem_7])
     db.flush()
 
@@ -157,8 +142,8 @@ def seed_database(db: Session = None, reset: bool = False):
     db.flush()
 
     # Faculty Profiles
-    f_sharma = Faculty(user_id=u_fac1.id, faculty_code="FAC-CE-01", name="Dr. Rajesh Sharma", email="rajesh.sharma@college.edu", phone="+91 98765 43210")
-    f_verma = Faculty(user_id=u_fac2.id, faculty_code="FAC-CE-02", name="Prof. Ananya Verma", email="ananya.verma@college.edu", phone="+91 98765 43211")
+    f_sharma = Faculty(user_id=u_fac1.id, faculty_code="FAC-CE-01", name="Dr. Rajesh Sharma", department_id=dept_ce.id, email="rajesh.sharma@college.edu", phone="+91 98765 43210")
+    f_verma = Faculty(user_id=u_fac2.id, faculty_code="FAC-CE-02", name="Prof. Ananya Verma", department_id=dept_ce.id, email="ananya.verma@college.edu", phone="+91 98765 43211")
     db.add_all([f_sharma, f_verma])
     db.flush()
 
@@ -450,11 +435,6 @@ def seed_database(db: Session = None, reset: bool = False):
     db.add_all(all_components)
     db.flush()
 
-    # Scope assignments: default to ALL for general components, Division A for specific ones
-    for comp in all_components:
-        db.add(ComponentAssignment(component_id=comp.id, scope_type=AssignmentScope.ALL))
-    db.flush()
-
     # 11. Groups & Projects
     # Group Alpha in Computer Networks (Rahul Patel + Aarav Shah)
     grp_cn = Group(
@@ -510,13 +490,6 @@ def seed_database(db: Session = None, reset: bool = False):
         assigned_to_group_id=grp_cn.id
     )
     db.add(t_proposed)
-    db.flush()
-    db.add(TopicHistory(
-        topic_id=t_proposed.id,
-        action="PROPOSED_AND_AUTO_APPROVED",
-        changed_by_user_id=u_stu1.id,
-        comment="Auto-approved upon submission by student Rahul Patel"
-    ))
 
     # Topic Pool for DBMS
     t_pool1 = Topic(
@@ -536,22 +509,28 @@ def seed_database(db: Session = None, reset: bool = False):
     )
     db.add_all([t_pool1, t_pool2])
 
-    # 13. Student Progress & Reviews for Rahul Patel (230101)
-    # Certification completed
+    # 13. Student Progress & Faculty Evaluations for Rahul Patel (230101)
+    # Certification completed & ACCEPTED with faculty feedback
     p_db_cert = StudentComponentProgress(
         student_id=s_rahul.id,
         component_id=c_db_cert.id,
         progress_state=ProgressState.DONE,
-        submission_state=SubmissionState.SUBMITTED,
-        submitted_at=now - timedelta(days=5)
+        submission_state=SubmissionState.ACCEPTED,
+        submitted_at=now - timedelta(days=5),
+        faculty_feedback="Verified credential from MongoDB University. Excellent score in query aggregation.",
+        reviewed_by_faculty_id=f_verma.id,
+        reviewed_at=now - timedelta(days=4)
     )
-    # Case study completed
+    # Case study completed & ACCEPTED with faculty feedback
     p_se_case = StudentComponentProgress(
         student_id=s_rahul.id,
         component_id=c_se_case.id,
         progress_state=ProgressState.DONE,
-        submission_state=SubmissionState.SUBMITTED,
-        submitted_at=now - timedelta(days=3)
+        submission_state=SubmissionState.ACCEPTED,
+        submitted_at=now - timedelta(days=3),
+        faculty_feedback="Thorough case study analysis with clear architectural patterns.",
+        reviewed_by_faculty_id=f_sharma.id,
+        reviewed_at=now - timedelta(days=2)
     )
     # Wireshark in progress
     p_cn_exp = StudentComponentProgress(
@@ -567,7 +546,7 @@ def seed_database(db: Session = None, reset: bool = False):
         progress_state=ProgressState.TODO,
         submission_state=SubmissionState.NOT_SUBMITTED
     )
-    # PPT in progress
+    # PPT in progress & submitted for faculty review
     p_cn_ppt = StudentComponentProgress(
         student_id=s_rahul.id,
         component_id=c_cn_ppt.id,
@@ -578,17 +557,6 @@ def seed_database(db: Session = None, reset: bool = False):
 
     db.add_all([p_db_cert, p_se_case, p_cn_exp, p_db_rep, p_cn_ppt])
     db.flush()
-
-    # Faculty Review on completed certification (marks securely stored, hidden from student)
-    rev_cert = FacultyReview(
-        student_id=s_rahul.id,
-        component_id=c_db_cert.id,
-        faculty_id=f_verma.id,
-        internal_marks=24.5,  # Out of 25. Hidden from student!
-        feedback="Verified credential from MongoDB University. Excellent score in query aggregation.",
-        is_rejected=False
-    )
-    db.add(rev_cert)
 
     # 14. Notifications for Rahul Patel
     db.add_all([

@@ -20,13 +20,6 @@ class TopicMode(str, enum.Enum):
     NO_TOPIC = "NO_TOPIC"
 
 
-class AssignmentScope(str, enum.Enum):
-    ALL = "ALL"
-    DIVISION = "DIVISION"
-    GROUP = "GROUP"
-    STUDENT = "STUDENT"
-
-
 class PblActivity(Base, TimestampMixin):
     __tablename__ = "pbl_activities"
 
@@ -108,18 +101,4 @@ class Component(Base, TimestampMixin):
     # Relationships
     pbl_activity = relationship("PblActivity", back_populates="components")
     component_type = relationship("ComponentType", back_populates="components")
-    assignments = relationship("ComponentAssignment", back_populates="component", cascade="all, delete-orphan")
     progress_records = relationship("StudentComponentProgress", back_populates="component", cascade="all, delete-orphan")
-    faculty_reviews = relationship("FacultyReview", back_populates="component", cascade="all, delete-orphan")
-
-
-class ComponentAssignment(Base):
-    __tablename__ = "component_assignments"
-
-    id = Column(Integer, primary_key=True, index=True)
-    component_id = Column(Integer, ForeignKey("components.id", ondelete="CASCADE"), nullable=False)
-    scope_type = Column(Enum(AssignmentScope), default=AssignmentScope.ALL, nullable=False)
-    target_id = Column(Integer, nullable=True)  # division_id, group_id, or student_id when scope != ALL
-    custom_description = Column(Text, nullable=True)  # Distinct instructions for this group/division/student
-
-    component = relationship("Component", back_populates="assignments")

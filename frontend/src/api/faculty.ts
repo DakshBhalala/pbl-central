@@ -34,9 +34,10 @@ export interface SubmissionRow {
   submission_state: string;
   progress_state: string;
   submitted_at?: string;
-  internal_marks?: number;
+  status?: string;
   feedback?: string;
   is_rejected: boolean;
+  reviewed_at?: string;
 }
 
 export const facultyApi = {
@@ -108,9 +109,9 @@ export const facultyApi = {
   reviewSubmission: async (data: {
     student_id: number;
     component_id: number;
-    internal_marks?: number;
+    status?: 'ACCEPTED' | 'REJECTED';
     feedback?: string;
-    is_rejected: boolean;
+    is_rejected?: boolean;
   }): Promise<any> => {
     return apiClient('/faculty/reviews', {
       method: 'POST',

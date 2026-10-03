@@ -19,22 +19,6 @@ class DepartmentOut(DepartmentBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ProgramBase(BaseModel):
-    name: str
-    code: str
-    department_id: int
-
-
-class ProgramCreate(ProgramBase):
-    pass
-
-
-class ProgramOut(ProgramBase):
-    id: int
-    department_name: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
-
-
 class AcademicYearBase(BaseModel):
     name: str
     start_date: date
@@ -56,7 +40,6 @@ class SemesterBase(BaseModel):
     number: int
     academic_year_id: int
     department_id: int
-    program_id: Optional[int] = None
 
 
 class SemesterCreate(SemesterBase):

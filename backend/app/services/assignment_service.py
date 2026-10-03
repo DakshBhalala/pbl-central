@@ -1,10 +1,10 @@
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from app.models.user import Student
-from app.models.pbl import PblActivity, Component, ComponentAssignment, AssignmentScope, PblStatus
+from app.models.pbl import PblActivity, Component, PblStatus
 from app.models.group import Group, GroupMember
-from app.models.progress import StudentComponentProgress, ProgressState, SubmissionState, FacultyReview
-from app.schemas.pbl import ComponentOut, ComponentAssignmentOut
+from app.models.progress import StudentComponentProgress, ProgressState, SubmissionState
+from app.schemas.pbl import ComponentOut
 from app.services.deadline_service import calculate_deadline_info
 
 
@@ -22,30 +22,13 @@ def get_student_group_ids(db: Session, student_id: int, pbl_activity_id: Optiona
 def is_component_assigned_to_student(
     component: Component,
     student: Student,
-    student_group_ids_for_pbl: List[int]
+    student_group_ids_for_pbl: Optional[List[int]] = None
 ) -> bool:
     """
-    Checks if a component is assigned to the student based on assignment scopes:
-    - ALL: applies to all students in the PBL's semester/department
-    - DIVISION: matches student's division_id
-    - GROUP: matches any of the student's group IDs for this PBL
-    - STUDENT: matches student's ID directly
-    If a component has no explicit assignments, default to ALL.
+    In the simplified design, all components of a PBL activity apply to all students
+    enrolled in that activity's department and semester.
     """
-    if not component.assignments:
-        return True
-
-    for assignment in component.assignments:
-        if assignment.scope_type == AssignmentScope.ALL:
-            return True
-        elif assignment.scope_type == AssignmentScope.DIVISION and assignment.target_id == student.division_id:
-            return True
-        elif assignment.scope_type == AssignmentScope.STUDENT and assignment.target_id == student.id:
-            return True
-        elif assignment.scope_type == AssignmentScope.GROUP and assignment.target_id in student_group_ids_for_pbl:
-            return True
-
-    return False
+    return True
 
 
 def get_or_create_progress(
@@ -80,53 +63,12 @@ def enrich_component_for_student(
     student: Student
 ) -> ComponentOut:
     progress = get_or_create_progress(db, student.id, component.id)
-    review = (
-        db.query(FacultyReview)
-        .filter(
-            FacultyReview.student_id == student.id,
-            FacultyReview.component_id == component.id
-        )
-        .first()
-    )
 
     deadline_state, days_remaining = calculate_deadline_info(
         component.deadline,
         progress.progress_state,
         progress.submission_state
     )
-
-    # Determine group-specific or division-specific custom description if configured
-    student_group_ids = get_student_group_ids(db, student.id, component.pbl_activity_id)
-    student_desc = None
-    group_desc = None
-    div_desc = None
-    all_desc = None
-
-    for a in component.assignments:
-        scope = a.scope_type.value if hasattr(a.scope_type, 'value') else str(a.scope_type)
-        if not a.custom_description:
-            continue
-        if scope == "STUDENT" and a.target_id == student.id:
-            student_desc = a.custom_description
-        elif scope == "GROUP" and a.target_id in student_group_ids:
-            group_desc = a.custom_description
-        elif scope == "DIVISION" and a.target_id == student.division_id:
-            div_desc = a.custom_description
-        elif scope == "ALL":
-            all_desc = a.custom_description
-
-    custom_desc = student_desc or group_desc or div_desc or all_desc
-
-    assignments_out = [
-        ComponentAssignmentOut(
-            id=a.id,
-            component_id=a.component_id,
-            scope_type=a.scope_type,
-            target_id=a.target_id,
-            custom_description=a.custom_description,
-        )
-        for a in component.assignments
-    ]
 
     return ComponentOut(
         id=component.id,
@@ -135,8 +77,7 @@ def enrich_component_for_student(
         component_type_name=component.component_type.name if component.component_type else None,
         component_type_icon=component.component_type.icon if component.component_type else "FileText",
         title=component.title,
-        description=custom_desc if custom_desc else component.description,
-        assignment_custom_description=custom_desc,
+        description=component.description,
         deadline=component.deadline,
         submission_required=component.submission_required,
         external_submission_url=component.external_submission_url,
@@ -144,13 +85,11 @@ def enrich_component_for_student(
         external_resource_url=component.external_resource_url,
         is_group=component.is_group,
         created_at=component.created_at,
-        assignments=assignments_out,
         deadline_state=deadline_state,
         days_remaining=days_remaining,
         student_progress_state=progress.progress_state.value,
         student_submission_state=progress.submission_state.value,
-        faculty_feedback=review.feedback if review and review.feedback else None,
-        # NOTE: Marks are STRICTLY NOT included in ComponentOut!
+        faculty_feedback=progress.faculty_feedback,
     )
 
 
@@ -172,9 +111,7 @@ def get_assigned_components_for_student(
     results: List[ComponentOut] = []
 
     for pbl in pbl_activities:
-        student_group_ids = get_student_group_ids(db, student.id, pbl.id)
         for comp in pbl.components:
-            if is_component_assigned_to_student(comp, student, student_group_ids):
-                results.append(enrich_component_for_student(db, comp, student))
+            results.append(enrich_component_for_student(db, comp, student))
 
     return results

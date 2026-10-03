@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional, List
 from pydantic import BaseModel, HttpUrl, ConfigDict
-from app.models.pbl import PblStatus, TopicMode, AssignmentScope
+from app.models.pbl import PblStatus, TopicMode
 
 
 class ComponentTypeBase(BaseModel):
@@ -20,26 +20,6 @@ class ComponentTypeOut(ComponentTypeBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ComponentAssignmentCreate(BaseModel):
-    scope_type: AssignmentScope = AssignmentScope.ALL
-    target_id: Optional[int] = None  # division_id, group_id, or student_id
-    custom_description: Optional[str] = None  # Group/Division specific instruction
-
-
-class ComponentAssignmentUpdate(BaseModel):
-    custom_description: Optional[str] = None
-
-
-class ComponentAssignmentOut(BaseModel):
-    id: int
-    component_id: int
-    scope_type: AssignmentScope
-    target_id: Optional[int] = None
-    target_label: Optional[str] = None
-    custom_description: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
-
-
 class ComponentCreate(BaseModel):
     component_type_id: int
     title: str
@@ -50,7 +30,6 @@ class ComponentCreate(BaseModel):
     external_classroom_url: Optional[str] = None
     external_resource_url: Optional[str] = None
     is_group: bool = False
-    assignments: Optional[List[ComponentAssignmentCreate]] = [ComponentAssignmentCreate(scope_type=AssignmentScope.ALL)]
 
 
 class ComponentUpdate(BaseModel):
@@ -80,14 +59,12 @@ class ComponentOut(BaseModel):
     external_resource_url: Optional[str] = None
     is_group: bool
     created_at: datetime
-    assignments: List[ComponentAssignmentOut] = []
 
     # Dynamic fields evaluated for the student viewing
-    assignment_custom_description: Optional[str] = None  # Specific instruction for student's group
     deadline_state: Optional[str] = None  # UPCOMING, DUE_SOON, DUE_TODAY, OVERDUE, COMPLETED
     days_remaining: Optional[int] = None
     student_progress_state: Optional[str] = None  # TODO, IN_PROGRESS, DONE
-    student_submission_state: Optional[str] = None  # NOT_SUBMITTED, SUBMITTED, REJECTED
+    student_submission_state: Optional[str] = None  # NOT_SUBMITTED, SUBMITTED, ACCEPTED, REJECTED
     faculty_feedback: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 

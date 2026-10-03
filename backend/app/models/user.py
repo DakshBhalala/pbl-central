@@ -59,18 +59,9 @@ class Faculty(Base, TimestampMixin):
     email = Column(String(150), nullable=True)
     phone = Column(String(30), nullable=True)
 
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+
     # Relationships
     user = relationship("User", back_populates="faculty_profile")
-    pbl_associations = relationship("PblFaculty", back_populates="faculty", cascade="all, delete-orphan")
-    departments = relationship("FacultyDepartment", back_populates="faculty", cascade="all, delete-orphan")
-
-
-class FacultyDepartment(Base):
-    __tablename__ = "faculty_departments"
-
-    id = Column(Integer, primary_key=True, index=True)
-    faculty_id = Column(Integer, ForeignKey("faculty.id", ondelete="CASCADE"), nullable=False)
-    department_id = Column(Integer, ForeignKey("departments.id", ondelete="CASCADE"), nullable=False)
-
-    faculty = relationship("Faculty", back_populates="departments")
     department = relationship("Department")
+    pbl_associations = relationship("PblFaculty", back_populates="faculty", cascade="all, delete-orphan")

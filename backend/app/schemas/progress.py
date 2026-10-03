@@ -17,7 +17,7 @@ class StudentSubmissionToggle(BaseModel):
 class FacultyReviewCreate(BaseModel):
     student_id: int
     component_id: int
-    internal_marks: Optional[float] = None  # Faculty-only
+    status: Optional[str] = "ACCEPTED"  # "ACCEPTED" or "REJECTED"
     feedback: Optional[str] = None
     is_rejected: bool = False
 
@@ -31,9 +31,9 @@ class FacultyReviewOut(BaseModel):
     component_title: str
     faculty_id: int
     faculty_name: str
-    internal_marks: Optional[float] = None
+    status: str = "ACCEPTED"
     feedback: Optional[str] = None
-    is_rejected: bool
+    is_rejected: bool = False
     reviewed_at: datetime
     model_config = ConfigDict(from_attributes=True)
 

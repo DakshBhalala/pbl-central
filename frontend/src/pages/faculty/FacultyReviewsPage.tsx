@@ -105,12 +105,12 @@ export const FacultyReviewsPage: React.FC = () => {
             <table className={`data-table ${density === 'compact' ? 'data-table-compact' : 'data-table-comfortable'}`}>
               <thead>
                 <tr>
-                  <th style={{ width: '25%' }}>Student</th>
+                  <th style={{ width: '22%' }}>Student</th>
                   <th style={{ width: '15%' }}>Enrollment</th>
                   <th style={{ width: '10%' }}>Division</th>
                   <th style={{ width: '20%' }}>Deliverable</th>
-                  <th style={{ width: '10%' }}>Status</th>
-                  <th style={{ width: '10%' }}>Marks</th>
+                  <th style={{ width: '13%' }}>Status</th>
+                  <th style={{ width: '10%' }}>Decision</th>
                   <th style={{ width: '10%', textAlign: 'right' }}>Action</th>
                 </tr>
               </thead>
@@ -130,8 +130,14 @@ export const FacultyReviewsPage: React.FC = () => {
                     <td>
                       <StatusBadge type="submission" status={sub.submission_state} />
                     </td>
-                    <td className="font-mono" style={{ fontWeight: 600 }}>
-                      {sub.internal_marks != null ? `${sub.internal_marks} pts` : '—'}
+                    <td>
+                      {sub.submission_state === 'ACCEPTED' ? (
+                        <span style={{ color: '#059669', fontWeight: 600, fontSize: '0.8125rem' }}>✓ Accepted</span>
+                      ) : sub.is_rejected || sub.submission_state === 'REJECTED' ? (
+                        <span style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.8125rem' }}>✗ Rejected</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)', fontSize: '0.8125rem' }}>Pending</span>
+                      )}
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <button
@@ -139,7 +145,7 @@ export const FacultyReviewsPage: React.FC = () => {
                         className="btn btn-secondary btn-sm"
                         onClick={() => setReviewTarget(sub)}
                       >
-                        Grade
+                        Evaluate
                       </button>
                     </td>
                   </tr>

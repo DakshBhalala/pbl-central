@@ -15,6 +15,7 @@ class ProgressState(str, enum.Enum):
 class SubmissionState(str, enum.Enum):
     NOT_SUBMITTED = "NOT_SUBMITTED"
     SUBMITTED = "SUBMITTED"
+    ACCEPTED = "ACCEPTED"
     REJECTED = "REJECTED"
 
 
@@ -32,27 +33,12 @@ class StudentComponentProgress(Base, TimestampMixin):
     submission_state = Column(Enum(SubmissionState), default=SubmissionState.NOT_SUBMITTED, nullable=False)
     submitted_at = Column(DateTime, nullable=True)
 
+    # Faculty Review & Feedback (Accept / Reject decision)
+    faculty_feedback = Column(Text, nullable=True)
+    reviewed_by_faculty_id = Column(Integer, ForeignKey("faculty.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+
     # Relationships
     student = relationship("Student", back_populates="progress_entries")
     component = relationship("Component", back_populates="progress_records")
-
-
-class FacultyReview(Base):
-    __tablename__ = "faculty_reviews"
-    __table_args__ = (
-        UniqueConstraint("student_id", "component_id", name="uq_faculty_student_component_review"),
-    )
-
-    id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
-    component_id = Column(Integer, ForeignKey("components.id", ondelete="CASCADE"), nullable=False)
-    faculty_id = Column(Integer, ForeignKey("faculty.id", ondelete="CASCADE"), nullable=False)
-
-    internal_marks = Column(Float, nullable=True)  # STRICTLY HIDDEN from students
-    feedback = Column(Text, nullable=True)
-    is_rejected = Column(Boolean, default=False, nullable=False)
-    reviewed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-
-    student = relationship("Student")
-    component = relationship("Component", back_populates="faculty_reviews")
-    faculty = relationship("Faculty")
+    reviewed_by_faculty = relationship("Faculty")

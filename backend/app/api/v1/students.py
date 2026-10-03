@@ -6,7 +6,7 @@ from app.api.deps import get_db, get_current_student, require_role
 from app.models.user import Student, UserRole
 from app.models.pbl import PblActivity, Component, PblStatus, TopicMode
 from app.models.group import Group, GroupMember, Project
-from app.models.topic import Topic, TopicHistory, TopicStatus
+from app.models.topic import Topic, TopicStatus
 from app.models.progress import StudentComponentProgress, ProgressState, SubmissionState
 from app.models.notification import Notification
 from app.schemas.user import StudentOut, StudentProfileUpdate
@@ -18,7 +18,7 @@ from app.schemas.progress import (
 )
 from app.schemas.pbl import ComponentOut, PblActivityOut, PblActivityDetailOut, FacultySimpleOut
 from app.schemas.group import GroupCreate, GroupOut, GroupMemberOut, ProjectOut
-from app.schemas.topic import TopicOut, TopicPropose, TopicHistoryOut
+from app.schemas.topic import TopicOut, TopicPropose
 from app.schemas.notification import NotificationOut
 from app.services.assignment_service import (
     get_assigned_components_for_student,
@@ -366,14 +366,6 @@ def propose_topic(
     db.add(topic)
     db.flush()
 
-    # Add history log
-    history = TopicHistory(
-        topic_id=topic.id,
-        action="PROPOSED_AND_AUTO_APPROVED",
-        changed_by_user_id=student.user_id,
-        comment="Topic proposed by student and automatically set to Approved per platform rules."
-    )
-    db.add(history)
     db.commit()
     db.refresh(topic)
 
@@ -390,15 +382,7 @@ def propose_topic(
         assigned_to_group_id=topic.assigned_to_group_id,
         assigned_to_student_id=topic.assigned_to_student_id,
         created_at=topic.created_at,
-        history=[
-            TopicHistoryOut(
-                id=history.id,
-                action=history.action,
-                changed_by_name=student.name,
-                comment=history.comment,
-                created_at=history.created_at
-            )
-        ]
+        history=[]
     )
 
 
@@ -577,13 +561,6 @@ def select_topic_from_pool(
     db.add(assigned_topic)
     db.flush()
 
-    history = TopicHistory(
-        topic_id=assigned_topic.id,
-        action="SELECTED_FROM_POOL",
-        changed_by_user_id=student.user_id,
-        comment=f"Topic selected from faculty pool by {student.name}"
-    )
-    db.add(history)
     db.commit()
     db.refresh(assigned_topic)
 
@@ -600,15 +577,7 @@ def select_topic_from_pool(
         assigned_to_group_id=assigned_topic.assigned_to_group_id,
         assigned_to_student_id=assigned_topic.assigned_to_student_id,
         created_at=assigned_topic.created_at,
-        history=[
-            TopicHistoryOut(
-                id=history.id,
-                action=history.action,
-                changed_by_name=student.name,
-                comment=history.comment,
-                created_at=history.created_at
-            )
-        ]
+        history=[]
     )
 
 

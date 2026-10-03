@@ -9,14 +9,12 @@ from app.models.pbl import (
     PblActivity,
     PblFaculty,
     Component,
-    ComponentAssignment,
     PblStatus,
-    AssignmentScope,
     TopicMode,
 )
 from app.models.group import Group, GroupMember, Project
-from app.models.topic import Topic, TopicHistory, TopicStatus
-from app.models.progress import StudentComponentProgress, FacultyReview, SubmissionState, ProgressState
+from app.models.topic import Topic, TopicStatus
+from app.models.progress import StudentComponentProgress, SubmissionState, ProgressState
 from app.schemas.pbl import (
     PblActivityCreate,
     PblActivityUpdate,
@@ -27,11 +25,9 @@ from app.schemas.pbl import (
     ComponentUpdate,
     ComponentOut,
     FacultySimpleOut,
-    ComponentAssignmentOut,
-    ComponentAssignmentUpdate,
 )
 from app.schemas.group import GroupCreate, GroupOut, GroupMemberOut, ProjectOut
-from app.schemas.topic import TopicCreate, TopicOut, TopicRejectRequest, TopicHistoryOut
+from app.schemas.topic import TopicCreate, TopicOut, TopicRejectRequest
 from app.schemas.progress import FacultyReviewCreate, FacultyReviewOut
 from app.schemas.user import StudentOut, StudentCreate, FacultyOut, FacultyProfileUpdate
 from app.services.pbl_service import duplicate_pbl_activity
@@ -68,19 +64,13 @@ def get_faculty_dashboard(
         .count() if pbl_ids else 0
     )
 
-    # Submissions needing review: status SUBMITTED without a faculty review yet
+    # Submissions needing review: status SUBMITTED
     pending_submissions = (
         db.query(StudentComponentProgress)
         .join(Component, StudentComponentProgress.component_id == Component.id)
-        .outerjoin(
-            FacultyReview,
-            (FacultyReview.student_id == StudentComponentProgress.student_id) &
-            (FacultyReview.component_id == StudentComponentProgress.component_id)
-        )
         .filter(
             Component.pbl_activity_id.in_(pbl_ids),
-            StudentComponentProgress.submission_state == SubmissionState.SUBMITTED,
-            FacultyReview.id == None
+            StudentComponentProgress.submission_state == SubmissionState.SUBMITTED
         )
         .count() if pbl_ids else 0
     )
@@ -282,23 +272,6 @@ def create_pbl_activity(
                 created_by=current_user.id
             )
             db.add(comp)
-            db.flush()
-
-            if c_data.assignments:
-                for a_data in c_data.assignments:
-                    assignment = ComponentAssignment(
-                        component_id=comp.id,
-                        scope_type=a_data.scope_type,
-                        target_id=a_data.target_id,
-                        custom_description=a_data.custom_description
-                    )
-                    db.add(assignment)
-            else:
-                db.add(ComponentAssignment(
-                    component_id=comp.id,
-                    scope_type=AssignmentScope.ALL,
-                    target_id=None
-                ))
             created_comps.append(comp)
 
     db.commit()
@@ -325,15 +298,6 @@ def create_pbl_activity(
             external_resource_url=c.external_resource_url,
             is_group=c.is_group,
             created_at=c.created_at,
-            assignments=[
-                ComponentAssignmentOut(
-                    id=a.id,
-                    component_id=a.component_id,
-                    scope_type=a.scope_type,
-                    target_id=a.target_id
-                )
-                for a in c.assignments
-            ]
         )
         for c in pbl.components
     ]
@@ -385,7 +349,7 @@ def get_pbl_activity_detail(
     # If faculty, ensure authorization to access this activity
     if current_user.role == UserRole.FACULTY and current_user.faculty_profile:
         assigned_faculty_ids = [assoc.faculty_id for assoc in pbl.faculty_members]
-        faculty_dept_ids = [d.department_id for d in current_user.faculty_profile.departments]
+        faculty_dept_ids = [current_user.faculty_profile.department_id] if current_user.faculty_profile.department_id else []
         if current_user.faculty_profile.id not in assigned_faculty_ids and pbl.department_id not in faculty_dept_ids:
             raise HTTPException(status_code=403, detail="You are not authorized to view this department's PBL activity")
 
@@ -407,16 +371,6 @@ def get_pbl_activity_detail(
             external_resource_url=c.external_resource_url,
             is_group=c.is_group,
             created_at=c.created_at,
-            assignments=[
-                ComponentAssignmentOut(
-                    id=a.id,
-                    component_id=a.component_id,
-                    scope_type=a.scope_type,
-                    target_id=a.target_id,
-                    custom_description=a.custom_description
-                )
-                for a in c.assignments
-            ]
         )
         for c in active_comps
     ]
@@ -469,7 +423,7 @@ def update_pbl_activity(
     # If faculty, check department or assignment authorization
     if current_user.role == UserRole.FACULTY and current_user.faculty_profile:
         assigned_faculty_ids = [assoc.faculty_id for assoc in pbl.faculty_members]
-        faculty_dept_ids = [d.department_id for d in current_user.faculty_profile.departments]
+        faculty_dept_ids = [current_user.faculty_profile.department_id] if current_user.faculty_profile.department_id else []
         if current_user.faculty_profile.id not in assigned_faculty_ids and pbl.department_id not in faculty_dept_ids:
             raise HTTPException(status_code=403, detail="You are not authorized to update this PBL activity")
 
@@ -544,23 +498,6 @@ def add_pbl_component(
         created_by=current_user.id
     )
     db.add(comp)
-    db.flush()
-
-    if data.assignments:
-        for a_data in data.assignments:
-            db.add(ComponentAssignment(
-                component_id=comp.id,
-                scope_type=a_data.scope_type,
-                target_id=a_data.target_id,
-                custom_description=a_data.custom_description
-            ))
-    else:
-        db.add(ComponentAssignment(
-            component_id=comp.id,
-            scope_type=AssignmentScope.ALL,
-            target_id=None
-        ))
-
     db.commit()
     db.refresh(comp)
 
@@ -583,15 +520,6 @@ def add_pbl_component(
         external_resource_url=comp.external_resource_url,
         is_group=comp.is_group,
         created_at=comp.created_at,
-        assignments=[
-            ComponentAssignmentOut(
-                id=a.id,
-                component_id=a.component_id,
-                scope_type=a.scope_type,
-                target_id=a.target_id
-            )
-            for a in comp.assignments
-        ]
     )
 
 
@@ -631,42 +559,6 @@ def update_component(
         external_resource_url=comp.external_resource_url,
         is_group=comp.is_group,
         created_at=comp.created_at,
-        assignments=[
-            ComponentAssignmentOut(
-                id=a.id,
-                component_id=a.component_id,
-                scope_type=a.scope_type,
-                target_id=a.target_id
-            )
-            for a in comp.assignments
-        ]
-    )
-
-
-@router.patch("/components/{component_id}/assignments/{assignment_id}", response_model=ComponentAssignmentOut)
-def update_component_assignment(
-    component_id: int,
-    assignment_id: int,
-    data: ComponentAssignmentUpdate,
-    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.ADMIN])),
-    db: Session = Depends(get_db)
-):
-    assignment = db.query(ComponentAssignment).filter(
-        ComponentAssignment.id == assignment_id,
-        ComponentAssignment.component_id == component_id
-    ).first()
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Component assignment not found")
-
-    assignment.custom_description = data.custom_description
-    db.commit()
-    db.refresh(assignment)
-    return ComponentAssignmentOut(
-        id=assignment.id,
-        component_id=assignment.component_id,
-        scope_type=assignment.scope_type,
-        target_id=assignment.target_id,
-        custom_description=assignment.custom_description
     )
 
 
@@ -681,7 +573,7 @@ def delete_component(
         raise HTTPException(status_code=404, detail="Component not found")
 
     # If student submissions or progress records exist, soft-delete to preserve academic history
-    if comp.progress_records or comp.faculty_reviews:
+    if comp.progress_records:
         comp.archived_at = datetime.now(timezone.utc)
         db.commit()
         return {"message": "Component archived successfully to preserve student records", "archived": True}
@@ -708,12 +600,7 @@ def list_pbl_submissions(
     for comp in pbl.components:
         for prog in comp.progress_records:
             student = prog.student
-            review = (
-                db.query(FacultyReview)
-                .filter(FacultyReview.student_id == student.id, FacultyReview.component_id == comp.id)
-                .first()
-            )
-
+            is_rejected = (prog.submission_state == SubmissionState.REJECTED)
             results.append({
                 "component_id": comp.id,
                 "component_title": comp.title,
@@ -724,9 +611,10 @@ def list_pbl_submissions(
                 "submission_state": prog.submission_state.value,
                 "progress_state": prog.progress_state.value,
                 "submitted_at": prog.submitted_at,
-                "internal_marks": review.internal_marks if review else None,
-                "feedback": review.feedback if review else None,
-                "is_rejected": review.is_rejected if review else False,
+                "status": prog.submission_state.value,
+                "feedback": prog.faculty_feedback,
+                "is_rejected": is_rejected,
+                "reviewed_at": prog.reviewed_at,
             })
 
     return results
@@ -741,28 +629,6 @@ def review_submission(
 ):
     faculty_id = faculty.id if faculty else 1
 
-    review = (
-        db.query(FacultyReview)
-        .filter(
-            FacultyReview.student_id == data.student_id,
-            FacultyReview.component_id == data.component_id
-        )
-        .first()
-    )
-    if not review:
-        review = FacultyReview(
-            student_id=data.student_id,
-            component_id=data.component_id,
-            faculty_id=faculty_id
-        )
-        db.add(review)
-
-    review.internal_marks = data.internal_marks
-    review.feedback = data.feedback
-    review.is_rejected = data.is_rejected
-    review.reviewed_at = datetime.now(timezone.utc)
-
-    # Update student's submission state accordingly
     progress = (
         db.query(StudentComponentProgress)
         .filter(
@@ -771,44 +637,66 @@ def review_submission(
         )
         .first()
     )
-    if progress:
-        if data.is_rejected:
-            progress.submission_state = SubmissionState.REJECTED
-        elif progress.submission_state == SubmissionState.NOT_SUBMITTED:
-            # If faculty reviews without rejection, can treat as accepted
-            progress.submission_state = SubmissionState.SUBMITTED
+    if not progress:
+        progress = StudentComponentProgress(
+            student_id=data.student_id,
+            component_id=data.component_id,
+            progress_state=ProgressState.IN_PROGRESS,
+            submission_state=SubmissionState.NOT_SUBMITTED
+        )
+        db.add(progress)
+
+    is_rejected = data.is_rejected or (data.status and data.status.upper() == "REJECTED")
+    now_utc = datetime.now(timezone.utc)
+
+    if is_rejected:
+        progress.submission_state = SubmissionState.REJECTED
+        progress.progress_state = ProgressState.IN_PROGRESS
+    else:
+        progress.submission_state = SubmissionState.ACCEPTED
+        progress.progress_state = ProgressState.DONE
+
+    progress.faculty_feedback = data.feedback
+    progress.reviewed_by_faculty_id = faculty_id
+    progress.reviewed_at = now_utc
 
     # Notify student
     student = db.query(Student).filter(Student.id == data.student_id).first()
     comp = db.query(Component).filter(Component.id == data.component_id).first()
+    fac_obj = db.query(Faculty).filter(Faculty.id == faculty_id).first()
+
     if student and comp:
-        msg = f"Feedback on {comp.title}: {data.feedback or 'Reviewed by faculty'}"
-        if data.is_rejected:
-            msg = f"Submission for {comp.title} was rejected: {data.feedback or 'Please check instructions'}"
+        if is_rejected:
+            msg = f"Submission for {comp.title} was rejected: {data.feedback or 'Please check instructions and resubmit'}"
+            title = "Submission Needs Attention"
+        else:
+            msg = f"Submission for {comp.title} was accepted! {data.feedback or 'Good job!'}"
+            title = "Submission Accepted"
+
         create_notification(
             db=db,
             user_id=student.user_id,
-            title="Faculty Feedback Received" if not data.is_rejected else "Submission Needs Attention",
+            title=title,
             message=msg,
             link=f"/student/pbl/{comp.pbl_activity_id}"
         )
 
     db.commit()
-    db.refresh(review)
+    db.refresh(progress)
 
     return FacultyReviewOut(
-        id=review.id,
-        student_id=review.student_id,
-        student_name=review.student.name if review.student else "",
-        enrollment_number=review.student.enrollment_number if review.student else "",
-        component_id=review.component_id,
-        component_title=review.component.title if review.component else "",
-        faculty_id=review.faculty_id,
-        faculty_name=review.faculty.name if review.faculty else "Faculty",
-        internal_marks=review.internal_marks,
-        feedback=review.feedback,
-        is_rejected=review.is_rejected,
-        reviewed_at=review.reviewed_at
+        id=progress.id,
+        student_id=progress.student_id,
+        student_name=student.name if student else "",
+        enrollment_number=student.enrollment_number if student else "",
+        component_id=progress.component_id,
+        component_title=comp.title if comp else "",
+        faculty_id=faculty_id,
+        faculty_name=fac_obj.name if fac_obj else "Faculty Guide",
+        status="REJECTED" if is_rejected else "ACCEPTED",
+        is_rejected=is_rejected,
+        feedback=progress.faculty_feedback,
+        reviewed_at=progress.reviewed_at or now_utc
     )
 
 
@@ -920,16 +808,6 @@ def get_pbl_topics(
     topics = db.query(Topic).filter(Topic.pbl_activity_id == pbl_id).all()
     results = []
     for t in topics:
-        hist_out = [
-            TopicHistoryOut(
-                id=h.id,
-                action=h.action,
-                changed_by_name=h.changed_by_user.username if h.changed_by_user else "System",
-                comment=h.comment,
-                created_at=h.created_at
-            )
-            for h in t.history
-        ]
         results.append(TopicOut(
             id=t.id,
             pbl_activity_id=t.pbl_activity_id,
@@ -944,7 +822,7 @@ def get_pbl_topics(
             assigned_to_group_name=t.assigned_to_group.group_name if t.assigned_to_group else None,
             assigned_to_student_id=t.assigned_to_student_id,
             rejection_reason=t.rejection_reason,
-            history=hist_out,
+            history=[],
             created_at=t.created_at
         ))
     return results
@@ -964,14 +842,6 @@ def reject_topic(
     topic.status = TopicStatus.REJECTED
     topic.rejection_reason = data.reason
 
-    hist = TopicHistory(
-        topic_id=topic.id,
-        action="REJECTED_BY_FACULTY",
-        changed_by_user_id=current_user.id,
-        comment=data.reason
-    )
-    db.add(hist)
-
     # Notify student
     if topic.proposed_by_student:
         create_notification(
@@ -984,17 +854,6 @@ def reject_topic(
 
     db.commit()
     db.refresh(topic)
-
-    hist_out = [
-        TopicHistoryOut(
-            id=h.id,
-            action=h.action,
-            changed_by_name=h.changed_by_user.username if h.changed_by_user else "Faculty",
-            comment=h.comment,
-            created_at=h.created_at
-        )
-        for h in topic.history
-    ]
 
     return TopicOut(
         id=topic.id,
@@ -1010,7 +869,7 @@ def reject_topic(
         assigned_to_group_name=topic.assigned_to_group.group_name if topic.assigned_to_group else None,
         assigned_to_student_id=topic.assigned_to_student_id,
         rejection_reason=topic.rejection_reason,
-        history=hist_out,
+        history=[],
         created_at=topic.created_at
     )
 
@@ -1028,14 +887,6 @@ def approve_topic(
     topic.status = TopicStatus.APPROVED
     topic.rejection_reason = None
 
-    hist = TopicHistory(
-        topic_id=topic.id,
-        action="APPROVED_BY_FACULTY",
-        changed_by_user_id=current_user.id,
-        comment="Topic approved by faculty"
-    )
-    db.add(hist)
-
     if topic.proposed_by_student:
         create_notification(
             db=db,
@@ -1047,17 +898,6 @@ def approve_topic(
 
     db.commit()
     db.refresh(topic)
-
-    hist_out = [
-        TopicHistoryOut(
-            id=h.id,
-            action=h.action,
-            changed_by_name=h.changed_by_user.username if h.changed_by_user else "Faculty",
-            comment=h.comment,
-            created_at=h.created_at
-        )
-        for h in topic.history
-    ]
 
     return TopicOut(
         id=topic.id,
@@ -1073,7 +913,7 @@ def approve_topic(
         assigned_to_group_name=topic.assigned_to_group.group_name if topic.assigned_to_group else None,
         assigned_to_student_id=topic.assigned_to_student_id,
         rejection_reason=topic.rejection_reason,
-        history=hist_out,
+        history=[],
         created_at=topic.created_at
     )
 
@@ -1099,15 +939,6 @@ def create_pbl_topic(
         assigned_to_student_id=data.assigned_to_student_id
     )
     db.add(topic)
-    db.flush()
-
-    hist = TopicHistory(
-        topic_id=topic.id,
-        action="CREATED_BY_FACULTY",
-        changed_by_user_id=current_user.id,
-        comment="Topic added to pool by faculty"
-    )
-    db.add(hist)
     db.commit()
     db.refresh(topic)
 
@@ -1122,15 +953,7 @@ def create_pbl_topic(
         assigned_to_group_id=topic.assigned_to_group_id,
         assigned_to_group_name=topic.assigned_to_group.group_name if topic.assigned_to_group else None,
         assigned_to_student_id=topic.assigned_to_student_id,
-        history=[
-            TopicHistoryOut(
-                id=hist.id,
-                action=hist.action,
-                changed_by_name=current_user.username,
-                comment=hist.comment,
-                created_at=hist.created_at
-            )
-        ],
+        history=[],
         created_at=topic.created_at
     )
 
@@ -1153,26 +976,8 @@ def assign_topic(
     if student_id is not None:
         topic.assigned_to_student_id = student_id
 
-    hist = TopicHistory(
-        topic_id=topic.id,
-        action="ASSIGNED_BY_FACULTY",
-        changed_by_user_id=current_user.id,
-        comment=f"Topic assigned to group {group_id} / student {student_id}"
-    )
-    db.add(hist)
     db.commit()
     db.refresh(topic)
-
-    hist_out = [
-        TopicHistoryOut(
-            id=h.id,
-            action=h.action,
-            changed_by_name=h.changed_by_user.username if h.changed_by_user else "Faculty",
-            comment=h.comment,
-            created_at=h.created_at
-        )
-        for h in topic.history
-    ]
 
     return TopicOut(
         id=topic.id,
@@ -1188,7 +993,7 @@ def assign_topic(
         assigned_to_group_name=topic.assigned_to_group.group_name if topic.assigned_to_group else None,
         assigned_to_student_id=topic.assigned_to_student_id,
         rejection_reason=topic.rejection_reason,
-        history=hist_out,
+        history=[],
         created_at=topic.created_at
     )
 

@@ -2,7 +2,7 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 from app.models.notification import Notification
 from app.models.user import User, Student
-from app.models.pbl import PblActivity, Component, AssignmentScope
+from app.models.pbl import PblActivity, Component
 from app.models.group import GroupMember
 from app.core.email import email_service
 
@@ -78,40 +78,21 @@ def notify_students_new_pbl(db: Session, pbl: PblActivity):
 
 
 def notify_students_new_component(db: Session, comp: Component, pbl: PblActivity):
-    """Notify students targeted by assignments when a new milestone/component is added."""
-    user_ids = set()
+    """Notify students enrolled in the PBL cohort when a new milestone/component is added."""
+    students = db.query(Student).filter(
+        Student.department_id == pbl.department_id,
+        Student.semester_id == pbl.semester_id
+    ).all()
     deadline_str = comp.deadline.strftime("%b %d, %Y") if comp.deadline else "TBD"
-
-    for a in comp.assignments:
-        if a.scope_type == AssignmentScope.ALL:
-            students = db.query(Student).filter(
-                Student.department_id == pbl.department_id,
-                Student.semester_id == pbl.semester_id
-            ).all()
-            for s in students:
-                user_ids.add(s.user_id)
-        elif a.scope_type == AssignmentScope.DIVISION and a.target_id:
-            students = db.query(Student).filter(Student.division_id == a.target_id).all()
-            for s in students:
-                user_ids.add(s.user_id)
-        elif a.scope_type == AssignmentScope.GROUP and a.target_id:
-            members = db.query(GroupMember).filter(GroupMember.group_id == a.target_id).all()
-            for m in members:
-                if m.student:
-                    user_ids.add(m.student.user_id)
-        elif a.scope_type == AssignmentScope.STUDENT and a.target_id:
-            st = db.query(Student).filter(Student.id == a.target_id).first()
-            if st:
-                user_ids.add(st.user_id)
 
     title = f"New Milestone: {comp.title}"
     msg = f"A new milestone '{comp.title}' has been added to '{pbl.title}'. Due on {deadline_str}."
     link = f"/student/pbl/{pbl.id}"
 
-    for uid in user_ids:
+    for s in students:
         create_notification(
             db=db,
-            user_id=uid,
+            user_id=s.user_id,
             title=title,
             message=msg,
             link=link
@@ -119,40 +100,21 @@ def notify_students_new_component(db: Session, comp: Component, pbl: PblActivity
 
 
 def notify_students_updated_component(db: Session, comp: Component, pbl: PblActivity):
-    """Notify targeted students when an existing milestone/component is modified and saved."""
-    user_ids = set()
+    """Notify students enrolled in the PBL cohort when an existing milestone/component is modified."""
+    students = db.query(Student).filter(
+        Student.department_id == pbl.department_id,
+        Student.semester_id == pbl.semester_id
+    ).all()
     deadline_str = comp.deadline.strftime("%b %d, %Y") if comp.deadline else "TBD"
-
-    for a in comp.assignments:
-        if a.scope_type == AssignmentScope.ALL:
-            students = db.query(Student).filter(
-                Student.department_id == pbl.department_id,
-                Student.semester_id == pbl.semester_id
-            ).all()
-            for s in students:
-                user_ids.add(s.user_id)
-        elif a.scope_type == AssignmentScope.DIVISION and a.target_id:
-            students = db.query(Student).filter(Student.division_id == a.target_id).all()
-            for s in students:
-                user_ids.add(s.user_id)
-        elif a.scope_type == AssignmentScope.GROUP and a.target_id:
-            members = db.query(GroupMember).filter(GroupMember.group_id == a.target_id).all()
-            for m in members:
-                if m.student:
-                    user_ids.add(m.student.user_id)
-        elif a.scope_type == AssignmentScope.STUDENT and a.target_id:
-            st = db.query(Student).filter(Student.id == a.target_id).first()
-            if st:
-                user_ids.add(st.user_id)
 
     title = f"Milestone Updated: {comp.title}"
     msg = f"The milestone '{comp.title}' in '{pbl.title}' has been updated. Due on {deadline_str}."
     link = f"/student/pbl/{pbl.id}"
 
-    for uid in user_ids:
+    for s in students:
         create_notification(
             db=db,
-            user_id=uid,
+            user_id=s.user_id,
             title=title,
             message=msg,
             link=link

@@ -34,18 +34,3 @@ class Topic(Base, TimestampMixin):
     proposed_by_student = relationship("Student", foreign_keys=[proposed_by_student_id])
     assigned_to_student = relationship("Student", foreign_keys=[assigned_to_student_id])
     assigned_to_group = relationship("Group", back_populates="topics")
-    history = relationship("TopicHistory", back_populates="topic", cascade="all, delete-orphan")
-
-
-class TopicHistory(Base):
-    __tablename__ = "topic_histories"
-
-    id = Column(Integer, primary_key=True, index=True)
-    topic_id = Column(Integer, ForeignKey("topics.id", ondelete="CASCADE"), nullable=False)
-    action = Column(String(50), nullable=False)  # PROPOSED, APPROVED, REJECTED, ASSIGNED
-    changed_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    comment = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-
-    topic = relationship("Topic", back_populates="history")
-    changed_by_user = relationship("User")

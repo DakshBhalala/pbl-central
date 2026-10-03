@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.models.pbl import PblActivity, Component, ComponentAssignment, PblFaculty, PblStatus, AssignmentScope
+from app.models.pbl import PblActivity, Component, PblFaculty, PblStatus
 from app.models.academic import Semester, AcademicYear, Subject
 from app.schemas.pbl import PblDuplicateRequest
 
@@ -75,28 +75,6 @@ def duplicate_pbl_activity(
             created_by=current_user_id,
         )
         db.add(new_comp)
-        db.flush()
-
-        # Replicate generic ALL assignment scope
-        has_generic_scope = False
-        for assign in comp.assignments:
-            if assign.scope_type == AssignmentScope.ALL:
-                new_assign = ComponentAssignment(
-                    component_id=new_comp.id,
-                    scope_type=AssignmentScope.ALL,
-                    target_id=None
-                )
-                db.add(new_assign)
-                has_generic_scope = True
-                break
-
-        if not has_generic_scope:
-            # Default to ALL in newly duplicated activity
-            db.add(ComponentAssignment(
-                component_id=new_comp.id,
-                scope_type=AssignmentScope.ALL,
-                target_id=None
-            ))
 
     db.commit()
     db.refresh(new_pbl)

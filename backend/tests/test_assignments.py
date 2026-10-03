@@ -8,7 +8,7 @@ def test_student_dashboard_components(client, student_token):
     assert data["active_pbl_count"] >= 4
     assert len(data["subject_summaries"]) >= 4
 
-    # CRITICAL SECURITY CHECK: Check that internal_marks is nowhere in student components
+    # CRITICAL AUDIT: Check that internal_marks is nowhere in student components
     for comp in data["upcoming_deadlines"] + data["overdue_items"]:
         assert "internal_marks" not in comp
 
@@ -34,17 +34,18 @@ def test_student_progress_and_submission_update(client, student_token):
     assert res_sub.json()["submission_state"] == "SUBMITTED"
 
 
-def test_faculty_submission_review_with_internal_marks(client, faculty_token):
+def test_faculty_submission_review_decision_accept_reject(client, faculty_token):
     headers = {"Authorization": f"Bearer {faculty_token}"}
     review_data = {
         "student_id": 1,
         "component_id": 1,
-        "internal_marks": 23.5,
+        "status": "ACCEPTED",
         "feedback": "Clean packet trace analysis.",
         "is_rejected": False
     }
     res = client.post("/api/v1/faculty/reviews", headers=headers, json=review_data)
     assert res.status_code == 200
     data = res.json()
-    assert data["internal_marks"] == 23.5
+    assert data["status"] == "ACCEPTED"
     assert data["feedback"] == "Clean packet trace analysis."
+    assert data["is_rejected"] is False

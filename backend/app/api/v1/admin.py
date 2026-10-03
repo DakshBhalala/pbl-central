@@ -3,12 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.api.deps import get_db, require_role
 from app.models.user import User, Student, Faculty, UserRole
-from app.models.academic import Department, Program, AcademicYear, Semester, Division, Subject
+from app.models.academic import Department, AcademicYear, Semester, Division, Subject
 from app.models.pbl import ComponentType, PblActivity, Component, PblStatus
 from app.models.progress import StudentComponentProgress, ProgressState
 from app.schemas.academic import (
     DepartmentCreate, DepartmentOut,
-    ProgramCreate, ProgramOut,
     AcademicYearCreate, AcademicYearOut,
     SemesterCreate, SemesterOut,
     DivisionCreate, DivisionOut,

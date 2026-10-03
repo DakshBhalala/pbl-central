@@ -567,9 +567,14 @@ export const StudentPBLDetail: React.FC = () => {
                 <label className="form-label" style={{ margin: 0 }}>Submission Status</label>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <StatusBadge type="submission" status={selectedComponent.student_submission_state || 'NOT_SUBMITTED'} />
-                  {selectedComponent.student_submission_state === 'REJECTED' ? (
+                  {selectedComponent.student_submission_state === 'ACCEPTED' ? (
+                    <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <CheckCircle2 size={13} />
+                      <span>Accepted by Faculty</span>
+                    </span>
+                  ) : selectedComponent.student_submission_state === 'REJECTED' ? (
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-danger)', fontWeight: 500 }}>
-                      Locked by faculty (Resubmission not permitted)
+                      Rejected by Faculty
                     </span>
                   ) : selectedComponent.student_submission_state !== 'SUBMITTED' ? (
                     <button
@@ -587,6 +592,26 @@ export const StudentPBLDetail: React.FC = () => {
                   )}
                 </div>
               </div>
+
+              {/* Faculty Feedback Section if available */}
+              {selectedComponent.faculty_feedback && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span className="form-label" style={{ margin: 0 }}>Faculty Feedback</span>
+                  <div
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: selectedComponent.student_submission_state === 'REJECTED' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+                      border: `1px solid ${selectedComponent.student_submission_state === 'REJECTED' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(16, 185, 129, 0.25)'}`,
+                      fontSize: '0.8125rem',
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {selectedComponent.faculty_feedback}
+                  </div>
+                </div>
+              )}
 
             {/* Instructions */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

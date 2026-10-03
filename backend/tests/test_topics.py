@@ -10,7 +10,7 @@ def test_student_propose_topic_auto_approved(client, student_token):
     data = res.json()
     assert data["status"] == "APPROVED"
     assert data["mode"] == "STUDENT_PROPOSED"
-    assert len(data["history"]) >= 1
+    assert data["title"] == "Autonomous Drone Pathfinding with Obstacle Avoidance"
 
 
 def test_faculty_reject_and_approve_topic(client, faculty_token):

@@ -1,8 +1,6 @@
 import pytest
 from datetime import datetime, timedelta, timezone
 from app.models.pbl import (
-    ComponentAssignment,
-    AssignmentScope,
     PblActivity,
     Component,
     TopicMode,
@@ -12,32 +10,20 @@ from app.models.user import Student, User, UserRole
 from app.models.academic import Department
 
 
-def test_assignment_custom_description_resolution(client, student_token, db):
+def test_student_components_cohort_resolution(client, student_token, db):
     """
-    Requirement 3: Same component, same deadline, but different descriptions
-    for different groups/scopes. Verify student sees their custom description.
+    Verify that components belonging to the student's PBL activity are seamlessly
+    resolved and accessible to the student.
     """
     headers = {"Authorization": f"Bearer {student_token}"}
-
-    # Create an assignment on component 1 for student 1 with custom description
-    comp_assignment = ComponentAssignment(
-        component_id=1,
-        scope_type=AssignmentScope.STUDENT,
-        target_id=1,
-        custom_description="Group A: Prepare a 10-slide presentation on TCP/IP."
-    )
-    db.add(comp_assignment)
-    db.commit()
-    db.expire_all()
 
     # Query student PBL detail
     res = client.get("/api/v1/students/me/pbl/1", headers=headers)
     assert res.status_code == 200
     data = res.json()
-    print("ALL COMPS:", [(c["id"], c["title"], c.get("assignment_custom_description")) for c in data["components"]])
+    assert len(data["components"]) >= 1
     comp1 = next((c for c in data["components"] if c["id"] == 1), None)
     assert comp1 is not None
-    assert comp1["assignment_custom_description"] == "Group A: Prepare a 10-slide presentation on TCP/IP."
 
 
 def test_student_topic_pool_selection(client, student_token, faculty_token, db):
@@ -87,7 +73,7 @@ def test_resubmission_prevention_after_rejection(client, student_token, faculty_
     review_data = {
         "student_id": 1,
         "component_id": 2,
-        "internal_marks": 5.0,
+        "status": "REJECTED",
         "feedback": "Plagiarism detected in certificate document. Resubmission blocked.",
         "is_rejected": True
     }

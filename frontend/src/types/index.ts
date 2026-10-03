@@ -84,7 +84,7 @@ export interface ComponentType {
 
 export type DeadlineState = 'COMPLETED' | 'OVERDUE' | 'DUE_TODAY' | 'DUE_SOON' | 'UPCOMING';
 export type ProgressState = 'TODO' | 'IN_PROGRESS' | 'DONE';
-export type SubmissionState = 'NOT_SUBMITTED' | 'SUBMITTED' | 'REJECTED';
+export type SubmissionState = 'NOT_SUBMITTED' | 'SUBMITTED' | 'ACCEPTED' | 'REJECTED';
 
 export interface ComponentAssignment {
   id: number;
@@ -110,7 +110,7 @@ export interface Component {
   external_classroom_url?: string;
   external_resource_url?: string;
   is_group: boolean;
-  assignments: ComponentAssignment[];
+  assignments?: ComponentAssignment[];
   deadline_state?: DeadlineState;
   days_remaining?: number;
   student_progress_state?: ProgressState;

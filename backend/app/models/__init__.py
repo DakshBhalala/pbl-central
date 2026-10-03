@@ -1,21 +1,18 @@
 from app.models.base import TimestampMixin
 from app.models.user import User, Student, Faculty, UserRole
-from app.models.academic import Department, Program, AcademicYear, Semester, Division, Subject
+from app.models.academic import Department, AcademicYear, Semester, Division, Subject
 from app.models.pbl import (
     PblActivity,
     PblFaculty,
     ComponentType,
     Component,
-    ComponentAssignment,
     PblStatus,
     TopicMode,
-    AssignmentScope,
 )
 from app.models.group import Group, GroupMember, Project
-from app.models.topic import Topic, TopicHistory, TopicStatus
+from app.models.topic import Topic, TopicStatus
 from app.models.progress import (
     StudentComponentProgress,
-    FacultyReview,
     ProgressState,
     SubmissionState,
 )
@@ -28,7 +25,6 @@ __all__ = [
     "Faculty",
     "UserRole",
     "Department",
-    "Program",
     "AcademicYear",
     "Semester",
     "Division",
@@ -37,18 +33,14 @@ __all__ = [
     "PblFaculty",
     "ComponentType",
     "Component",
-    "ComponentAssignment",
     "PblStatus",
     "TopicMode",
-    "AssignmentScope",
     "Group",
     "GroupMember",
     "Project",
     "Topic",
-    "TopicHistory",
     "TopicStatus",
     "StudentComponentProgress",
-    "FacultyReview",
     "ProgressState",
     "SubmissionState",
     "Notification",

@@ -28,9 +28,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, status }) => {
     }
   } else if (type === 'submission') {
     switch (status as SubmissionState) {
+      case 'ACCEPTED':
+        label = 'Accepted';
+        className = 'badge-success';
+        break;
       case 'SUBMITTED':
         label = 'Submitted';
-        className = 'badge-success';
+        className = 'badge-warning';
         break;
       case 'REJECTED':
         label = 'Rejected';

@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_user
-from app.models.academic import Department, Program, AcademicYear, Semester, Division, Subject
+from app.models.academic import Department, AcademicYear, Semester, Division, Subject
 from app.models.pbl import ComponentType
 from app.models.user import Faculty
 from app.schemas.academic import (
@@ -41,7 +41,6 @@ def get_semesters(department_id: Optional[int] = None, db: Session = Depends(get
             number=s.number,
             academic_year_id=s.academic_year_id,
             department_id=s.department_id,
-            program_id=s.program_id,
             academic_year_name=s.academic_year.name if s.academic_year else None,
             department_name=s.department.name if s.department else None
         )
