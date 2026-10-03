@@ -555,3 +555,62 @@ def browse_historical_pbls(
             created_at=p.created_at
         ))
     return results
+
+
+# --- DATABASE STORAGE INSPECTOR ---
+@router.get("/storage-overview")
+def get_storage_overview(db: Session = Depends(get_db)):
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.bind)
+    table_names = sorted(inspector.get_table_names())
+
+    tables_info = []
+    for table_name in table_names:
+        if table_name.startswith("sqlite_"):
+            continue
+
+        count_res = db.execute(text(f"SELECT count(*) FROM {table_name}")).scalar()
+        columns = inspector.get_columns(table_name)
+        col_list = [
+            {
+                "name": c["name"],
+                "type": str(c["type"]),
+                "nullable": c.get("nullable", True),
+                "primary_key": bool(c.get("primary_key", False))
+            }
+            for c in columns
+        ]
+
+        fks = inspector.get_foreign_keys(table_name)
+        fk_list = [
+            {
+                "constrained_columns": fk["constrained_columns"],
+                "referred_table": fk["referred_table"],
+                "referred_columns": fk["referred_columns"]
+            }
+            for fk in fks
+        ]
+
+        sample_rows_raw = db.execute(text(f"SELECT * FROM {table_name} LIMIT 5")).fetchall()
+        sample_rows = [dict(row._mapping) for row in sample_rows_raw]
+
+        for row in sample_rows:
+            if "password_hash" in row:
+                row["password_hash"] = "[PROTECTED BCRYPT HASH]"
+
+        tables_info.append({
+            "name": table_name,
+            "row_count": count_res,
+            "column_count": len(col_list),
+            "columns": col_list,
+            "foreign_keys": fk_list,
+            "sample_rows": sample_rows
+        })
+
+    return {
+        "engine": "SQLite",
+        "database_file": "pbl_central.db",
+        "total_tables": len(tables_info),
+        "tables": tables_info
+    }
+
