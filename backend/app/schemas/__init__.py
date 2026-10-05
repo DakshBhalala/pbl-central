@@ -1,0 +1,68 @@
+from app.schemas.user import (
+    Token,
+    TokenPayload,
+    UserLogin,
+    PasswordChange,
+    UserBase,
+    UserCreate,
+    UserOut,
+    StudentBase,
+    StudentCreate,
+    StudentOut,
+    FacultyBase,
+    FacultyCreate,
+    FacultyOut,
+)
+from app.schemas.academic import (
+    DepartmentBase,
+    DepartmentCreate,
+    DepartmentOut,
+    AcademicYearBase,
+    AcademicYearCreate,
+    AcademicYearOut,
+    SemesterBase,
+    SemesterCreate,
+    SemesterOut,
+    DivisionBase,
+    DivisionCreate,
+    DivisionOut,
+    SubjectBase,
+    SubjectCreate,
+    SubjectOut,
+)
+from app.schemas.pbl import (
+    ComponentTypeBase,
+    ComponentTypeCreate,
+    ComponentTypeOut,
+    ComponentCreate,
+    ComponentUpdate,
+    ComponentOut,
+    PblActivityBase,
+    PblActivityCreate,
+    PblActivityUpdate,
+    PblActivityOut,
+    PblActivityDetailOut,
+    PblDuplicateRequest,
+)
+from app.schemas.group import (
+    GroupMemberOut,
+    GroupBase,
+    GroupCreate,
+    GroupOut,
+    ProjectBase,
+    ProjectCreate,
+    ProjectUpdate,
+    ProjectOut,
+)
+from app.schemas.progress import (
+    StudentProgressUpdate,
+    StudentSubmissionToggle,
+    FacultyReviewCreate,
+    FacultyReviewOut,
+    SubjectPblSummary,
+    StudentDashboardOut,
+)
+from app.schemas.notification import (
+    NotificationCreate,
+    NotificationOut,
+)
